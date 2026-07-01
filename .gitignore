@@ -1,0 +1,21 @@
+# Build output
+bin/
+obj/
+publish/
+
+# Local runtime data
+data/
+*.protected
+
+# IDE / OS
+.idea/
+.vs/
+.vscode/
+*.user
+*.suo
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+

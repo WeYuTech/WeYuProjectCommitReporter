@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Git Commit 日報</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="主選單">
+      <div class="sidebar-brand">
+        <span class="brand-glyph"></span>
+        <strong>CommitOps</strong>
+      </div>
+
+      <nav class="side-nav">
+        <span class="nav-label">功能</span>
+        <button class="nav-item is-active" type="button" data-page="review">
+          <span class="nav-icon">01</span>
+          <span>日報確認</span>
+        </button>
+        <button class="nav-item" type="button" data-page="filters">
+          <span class="nav-icon">02</span>
+          <span>篩選工作台</span>
+        </button>
+        <button class="nav-item" type="button" data-page="commits">
+          <span class="nav-icon">03</span>
+          <span>Commit 清單</span>
+        </button>
+
+        <span class="nav-label support-label">系統</span>
+        <div class="side-card">
+          <span>SQL</span>
+          <strong>WeyutechV6</strong>
+          <small>人工確認後寫入</small>
+        </div>
+      </nav>
+    </aside>
+
+    <div class="main-area">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-button" type="button" aria-label="查看路徑">⌕</button>
+          <div class="search-shell">
+            <span>⌕</span>
+            <strong>C:\Users\rdpuser\RiderProjects</strong>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <p id="statusText">正在載入候選資料...</p>
+          <button id="scanButton" class="primary" type="button">立即掃描</button>
+          <div class="user-chip" aria-label="目前使用者">
+            <span>A</span>
+            <strong>Andy</strong>
+          </div>
+        </div>
+
+        <nav class="mobile-nav" aria-label="功能切換">
+          <button class="nav-item is-active" type="button" data-page="review">日報確認</button>
+          <button class="nav-item" type="button" data-page="filters">篩選工作台</button>
+          <button class="nav-item" type="button" data-page="commits">Commit 清單</button>
+        </nav>
+      </header>
+
+      <main class="content">
+        <section id="reportReviewPage" class="app-page is-active" data-page="review">
+          <section class="page-title" aria-label="頁面標題">
+            <div>
+              <span class="eyebrow">Report Review</span>
+              <h1>日報確認</h1>
+              <p>集中處理需要人工確認的 commit，確認後才會寫入專案管理。</p>
+            </div>
+            <div id="activeFilterBadge" class="active-filter-badge">未套用預先篩選</div>
+          </section>
+
+          <section class="metric-grid" aria-label="目前統計">
+            <article class="metric-card">
+              <span class="metric-label">待確認</span>
+              <strong id="pendingMetric">0</strong>
+              <small>等待人工確認寫入</small>
+              <div class="mini-bars"><i></i><i></i><i></i><i></i></div>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">已寫入</span>
+              <strong id="approvedMetric">0</strong>
+              <small>已送進專案管理</small>
+              <div class="mini-bars ok"><i></i><i></i><i></i><i></i></div>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">已略過</span>
+              <strong id="skippedMetric">0</strong>
+              <small>不再重複提醒</small>
+              <div class="mini-bars warn"><i></i><i></i><i></i><i></i></div>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">預設對應</span>
+              <strong id="mappingMetric">0</strong>
+              <small>repo 自動帶入條件</small>
+              <div class="mini-bars accent"><i></i><i></i><i></i><i></i></div>
+            </article>
+          </section>
+
+          <section class="report-entry-panel" aria-label="日報確認輸入方式">
+            <div class="tabbar report-tabbar" role="tablist" aria-label="日報輸入方式">
+              <button id="reportGitTab" class="tab-button is-active" type="button" role="tab" aria-selected="true" aria-controls="reportGitPanel">Git Commit</button>
+              <button id="reportManualTab" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="reportManualPanel">手動輸入</button>
+            </div>
+
+            <div id="reportGitPanel" class="tab-panel is-active" role="tabpanel" aria-labelledby="reportGitTab">
+              <section class="review-layout" aria-label="Git commit 日報確認工作區">
+                <section>
+                  <div class="section-head">
+                    <div>
+                      <h2>待確認 Commit</h2>
+                      <p>這裡只顯示需要寫入或略過的項目。</p>
+                    </div>
+                  </div>
+                  <section id="candidateList" class="candidate-list" aria-live="polite"></section>
+                </section>
+
+                <aside class="info-panel" aria-label="掃描狀態">
+                  <div class="panel-block scan-status-block">
+                    <span class="metric-label">最近掃描</span>
+                    <strong id="lastScanTime">尚未掃描</strong>
+                    <small id="scanStatusSummary">等待排程或手動掃描</small>
+                    <div id="scanRepoStatusList" class="scan-repo-list"></div>
+                  </div>
+                  <div class="panel-block">
+                    <span class="metric-label">排程</span>
+                    <strong>每 5 分鐘掃描</strong>
+                    <small>先 fetch，再產生候選資料</small>
+                  </div>
+                  <div class="panel-block">
+                    <span class="metric-label">COMMENT</span>
+                    <strong>autoGenerate</strong>
+                    <small>寫入 BAS_PROJECT_MAINTAIN_DETAIL</small>
+                  </div>
+                  <div class="panel-block">
+                    <span class="metric-label">PROJECT_STATUS</span>
+                    <strong>處理中</strong>
+                    <small>代碼 1</small>
+                  </div>
+                </aside>
+              </section>
+            </div>
+
+            <div id="reportManualPanel" class="tab-panel" role="tabpanel" aria-labelledby="reportManualTab">
+              <section class="manual-report-panel" aria-label="手動輸入日報">
+                <div class="section-head">
+                  <div>
+                    <h2>手動輸入日報</h2>
+                    <p>不需要 Git commit 時，直接填寫工作日期、PROJECT_CODE、PROCESS_TYPE 與 SUMMARY 後寫入。</p>
+                  </div>
+                </div>
+
+                <div class="manual-report-grid">
+                  <label>
+                    <span>工作日期</span>
+                    <input id="manualWorkDate" type="date">
+                  </label>
+                  <label>
+                    <span>PROJECT_CODE</span>
+                    <select id="manualProjectSelect"></select>
+                  </label>
+                  <label>
+                    <span>PROCESS_TYPE</span>
+                    <select id="manualProcessSelect"></select>
+                  </label>
+                </div>
+
+                <label class="manual-summary-label">
+                  <span>SUMMARY</span>
+                  <textarea id="manualSummary" rows="8" placeholder="[專案名稱]&#10;1.工作項目"></textarea>
+                </label>
+
+                <div class="manual-report-actions">
+                  <button id="submitManualReportButton" class="primary" type="button">確認寫入</button>
+                  <button id="clearManualReportButton" class="secondary" type="button">清空</button>
+                </div>
+                <p id="manualReportMessage" class="message"></p>
+              </section>
+            </div>
+          </section>
+        </section>
+
+        <section id="filterWorkbenchPage" class="app-page" data-page="filters">
+          <section class="page-title" aria-label="頁面標題">
+            <div>
+              <span class="eyebrow">Filter Workbench</span>
+              <h1>篩選工作台</h1>
+              <p>只管理快速篩選條件與 repo 對應規則，不顯示 commit 處理流程。</p>
+            </div>
+          </section>
+
+          <section class="filter-workbench" aria-label="篩選工作台">
+            <div class="workbench-head">
+              <div>
+                <h2>篩選條件與預設對應</h2>
+                <p>建立常用 repo 名稱對應，讓日報確認自動帶入 PROJECT_CODE 與 PROCESS_TYPE。</p>
+              </div>
+            </div>
+
+            <div class="tabbar" role="tablist" aria-label="篩選功能">
+              <button id="quickFilterTab" class="tab-button is-active" type="button" role="tab" aria-selected="true" aria-controls="quickFilterPanel">快速篩選入口</button>
+              <button id="mappingSettingsTab" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="mappingSettingsPanel">預設對應設定</button>
+            </div>
+
+            <div id="quickFilterPanel" class="tab-panel is-active" role="tabpanel" aria-labelledby="quickFilterTab">
+              <div class="panel-grid">
+                <label>
+                  <span>已儲存對應名稱</span>
+                  <select id="quickMappingSelect"></select>
+                </label>
+                <label>
+                  <span>PROJECT_CODE</span>
+                  <select id="quickProjectSelect"></select>
+                </label>
+                <label>
+                  <span>PROCESS_TYPE</span>
+                  <select id="quickProcessSelect"></select>
+                </label>
+                <div class="panel-actions">
+                  <button id="openFilteredPageButton" class="primary" type="button">套用到日報確認</button>
+                  <button id="clearFilterButton" class="secondary" type="button">清除篩選</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="mappingSettingsPanel" class="tab-panel" role="tabpanel" aria-labelledby="mappingSettingsTab">
+              <div class="panel-grid mapping-grid">
+                <label>
+                  <span>專案名稱</span>
+                  <input id="mappingNameInput" type="text" placeholder="例如：HongCheng-Smart-Scheduler">
+                </label>
+                <label>
+                  <span>PROJECT_CODE</span>
+                  <select id="mappingProjectSelect"></select>
+                </label>
+                <label>
+                  <span>PROCESS_TYPE</span>
+                  <select id="mappingProcessSelect"></select>
+                </label>
+                <div class="panel-actions">
+                  <button id="saveMappingButton" class="primary" type="button">儲存對應</button>
+                </div>
+              </div>
+              <div class="mapping-table-wrap">
+                <table class="mapping-table">
+                  <thead>
+                    <tr>
+                      <th>專案名稱</th>
+                      <th>PROJECT_CODE</th>
+                      <th>PROCESS_TYPE</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="mappingTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section id="commitListPage" class="app-page" data-page="commits">
+          <section class="page-title" aria-label="頁面標題">
+            <div>
+              <span class="eyebrow">Commit List</span>
+              <h1>Commit 清單</h1>
+              <p>檢視所有掃描到的 commit，可篩選與查看詳情，但不處理日報確認流程。</p>
+            </div>
+          </section>
+
+          <section class="commit-list-layout">
+            <section class="commit-table-panel">
+              <div class="commit-filter-grid" aria-label="Commit 篩選條件">
+                <label>
+                  <span>狀態</span>
+                  <select id="commitStatusFilter">
+                    <option value="">全部</option>
+                    <option value="Pending">待確認</option>
+                    <option value="Approved">已寫入</option>
+                    <option value="Skipped">已略過</option>
+                  </select>
+                </label>
+                <label>
+                  <span>專案</span>
+                  <select id="commitProjectFilter"></select>
+                </label>
+                <label>
+                  <span>作者</span>
+                  <input id="commitAuthorFilter" type="text" placeholder="例如：Andy">
+                </label>
+                <label>
+                  <span>關鍵字</span>
+                  <input id="commitKeywordFilter" type="text" placeholder="repo / branch / subject">
+                </label>
+                <label>
+                  <span>開始時間</span>
+                  <input id="commitDateFromFilter" type="date">
+                </label>
+                <label>
+                  <span>結束時間</span>
+                  <input id="commitDateToFilter" type="date">
+                </label>
+              </div>
+
+              <div class="commit-table-wrap">
+                <table class="commit-table">
+                  <thead>
+                    <tr>
+                      <th>狀態</th>
+                      <th>Repo</th>
+                      <th>Commit</th>
+                      <th>時間</th>
+                      <th>作者</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="commitTableBody"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <aside id="commitDetailPanel" class="commit-detail-panel" aria-label="Commit 詳細內容">
+              <div class="panel-block">
+                <span class="metric-label">Commit Detail</span>
+                <strong id="detailRepoName">尚未選取</strong>
+                <small id="detailMeta">從清單選一筆 commit 查看詳情</small>
+              </div>
+              <div class="detail-body">
+                <dl>
+                  <dt>狀態</dt>
+                  <dd id="detailStatus">-</dd>
+                  <dt>Branch</dt>
+                  <dd id="detailBranch">-</dd>
+                  <dt>SHA</dt>
+                  <dd id="detailSha">-</dd>
+                  <dt>作者</dt>
+                  <dd id="detailAuthor">-</dd>
+                  <dt>Subject</dt>
+                  <dd id="detailSubject">-</dd>
+                  <dt>SUMMARY</dt>
+                  <dd id="detailSummary">-</dd>
+                </dl>
+              </div>
+            </aside>
+          </section>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <template id="candidateTemplate">
+    <article class="candidate">
+      <div class="candidate-head">
+        <div>
+          <div class="candidate-meta">
+            <strong class="repo"></strong>
+            <span class="branch"></span>
+            <span class="sha"></span>
+            <span class="time"></span>
+          </div>
+          <p class="subject"></p>
+        </div>
+        <span class="status-pill">待確認</span>
+      </div>
+
+      <div class="form-grid">
+        <label>
+          <span>PROJECT_CODE</span>
+          <select class="project"></select>
+        </label>
+        <label>
+          <span>PROCESS_TYPE</span>
+          <select class="process"></select>
+        </label>
+      </div>
+      <p class="auto-mapping-note" hidden></p>
+
+      <label class="summary-label">
+        <span>SUMMARY</span>
+        <textarea class="summary" rows="5"></textarea>
+      </label>
+
+      <div class="candidate-actions">
+        <button class="approve primary" type="button">確認寫入</button>
+        <button class="regenerate secondary" type="button">重新產生 SUMMARY</button>
+        <button class="translate secondary" type="button">翻譯繁中</button>
+        <button class="skip danger" type="button">略過</button>
+      </div>
+      <p class="message"></p>
+    </article>
+  </template>
+
+  <script src="/app.js"></script>
+</body>
+</html>
