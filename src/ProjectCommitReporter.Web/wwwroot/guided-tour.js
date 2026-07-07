@@ -5,6 +5,7 @@
   const version = "v1";
   let activeTour = null;
 
+  const sleep = milliseconds => new Promise(resolve => window.setTimeout(resolve, milliseconds));
   const getStepNumber = element => Number.parseInt(element?.dataset?.tourStep || "", 10);
   const hasValidStep = element => Number.isInteger(getStepNumber(element)) && getStepNumber(element) > 0;
   const byStep = (a, b) => getStepNumber(a) - getStepNumber(b);
@@ -25,8 +26,57 @@
 
   const getSteps = root => Array.from(root.querySelectorAll(stepSelector))
     .filter(hasValidStep)
-    .filter(isVisible)
     .sort(byStep);
+
+  const activeAppPage = () => document.querySelector(".app-page.is-active[data-page]")?.dataset.page || "";
+
+  const switchToPage = pageId => {
+    if (!pageId || activeAppPage() === pageId) {
+      return false;
+    }
+
+    const navItems = Array.from(document.querySelectorAll(`.nav-item[data-page="${pageId}"]`));
+    const navItem = navItems.find(isVisible) || navItems[0];
+    navItem?.click();
+    return Boolean(navItem);
+  };
+
+  const getStepPage = step => step.dataset.tourSwitchPage
+    || step.closest(".app-page[data-page]")?.dataset.page
+    || "";
+
+  const clickBeforeTarget = step => {
+    const selector = step.dataset.tourBeforeClick;
+    if (!selector) {
+      return false;
+    }
+
+    const target = document.querySelector(selector);
+    target?.click();
+    return Boolean(target);
+  };
+
+  const waitForVisible = async (element, timeout = 900) => {
+    const started = Date.now();
+    while (!isVisible(element) && Date.now() - started < timeout) {
+      await sleep(50);
+    }
+    return isVisible(element);
+  };
+
+  const prepareStep = async step => {
+    const switchedPage = switchToPage(getStepPage(step));
+    if (switchedPage) {
+      await sleep(120);
+    }
+
+    const clicked = clickBeforeTarget(step);
+    if (clicked) {
+      await sleep(120);
+    }
+
+    await waitForVisible(step);
+  };
 
   const ensureUi = () => {
     let host = document.querySelector("[data-tour-host]");
@@ -118,7 +168,8 @@
       left = margin;
     }
 
-    card.style.top = `${Math.max(margin, top)}px`;
+    const maxTop = Math.max(margin, window.innerHeight - cardRect.height - margin);
+    card.style.top = `${Math.min(Math.max(margin, top), maxTop)}px`;
     card.style.left = `${Math.max(margin, Math.min(left, window.innerWidth - cardRect.width - margin))}px`;
   };
 
@@ -151,12 +202,13 @@
       placeCard(card, target, target.dataset.tourPlacement);
     };
 
-    const render = (shouldScroll = true) => {
+    const render = async (shouldScroll = true) => {
       clearTarget();
       target = steps[index];
+      await prepareStep(target);
 
       if (shouldScroll) {
-        target.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+        target.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
       }
 
       window.setTimeout(() => {
@@ -192,32 +244,32 @@
       activeTour = null;
     };
 
-    const nextStep = () => {
+    const nextStep = async () => {
       if (index >= steps.length - 1) {
         finish(true);
         return;
       }
 
       index += 1;
-      render();
+      await render();
     };
 
-    const previous = () => {
+    const previous = async () => {
       if (index <= 0) {
         return;
       }
 
       index -= 1;
-      render();
+      await render();
     };
 
     function onKeydown(event) {
       if (event.key === "Escape") {
         finish(false);
       } else if (event.key === "ArrowRight") {
-        nextStep();
+        void nextStep();
       } else if (event.key === "ArrowLeft") {
-        previous();
+        void previous();
       }
     }
 

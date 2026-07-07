@@ -20,27 +20,15 @@
           <span class="nav-icon">01</span>
           <span>日報確認</span>
         </button>
-        <button class="nav-item" type="button" data-page="filters"
-                data-tour-step="8"
-                data-tour-title="先設定常用選項"
-                data-tour-content="篩選工作台可以限制 PROJECT_CODE 與 PROCESS_TYPE 下拉選項，也能設定 repo 預設對應"
-                data-tour-placement="right">
+        <button class="nav-item" type="button" data-page="filters">
           <span class="nav-icon">02</span>
           <span>篩選工作台</span>
         </button>
-        <button class="nav-item" type="button" data-page="commits"
-                data-tour-step="9"
-                data-tour-title="查詢所有 Commit"
-                data-tour-content="Commit 清單用來查詢已掃描資料與處理狀態，不會直接寫入日報"
-                data-tour-placement="right">
+        <button class="nav-item" type="button" data-page="commits">
           <span class="nav-icon">03</span>
           <span>Commit 清單</span>
         </button>
-        <button class="nav-item" type="button" data-page="config"
-                data-tour-step="10"
-                data-tour-title="調整系統設定"
-                data-tour-content="設定頁可以修改掃描根目錄、作者、回溯天數、排程間隔與寫入人員"
-                data-tour-placement="right">
+        <button class="nav-item" type="button" data-page="config">
           <span class="nav-icon">04</span>
           <span>設定</span>
         </button>
@@ -84,18 +72,9 @@
 
         <nav class="mobile-nav" aria-label="功能切換">
           <button class="nav-item is-active" type="button" data-page="review">日報確認</button>
-          <button class="nav-item" type="button" data-page="filters"
-                  data-tour-step="8"
-                  data-tour-title="先設定常用選項"
-                  data-tour-content="篩選工作台可以限制 PROJECT_CODE 與 PROCESS_TYPE 下拉選項，也能設定 repo 預設對應">篩選工作台</button>
-          <button class="nav-item" type="button" data-page="commits"
-                  data-tour-step="9"
-                  data-tour-title="查詢所有 Commit"
-                  data-tour-content="Commit 清單用來查詢已掃描資料與處理狀態，不會直接寫入日報">Commit 清單</button>
-          <button class="nav-item" type="button" data-page="config"
-                  data-tour-step="10"
-                  data-tour-title="調整系統設定"
-                  data-tour-content="設定頁可以修改掃描根目錄、作者、回溯天數、排程間隔與寫入人員">設定</button>
+          <button class="nav-item" type="button" data-page="filters">篩選工作台</button>
+          <button class="nav-item" type="button" data-page="commits">Commit 清單</button>
+          <button class="nav-item" type="button" data-page="config">設定</button>
         </nav>
       </header>
 
@@ -241,7 +220,12 @@
         </section>
 
         <section id="filterWorkbenchPage" class="app-page" data-page="filters">
-          <section class="page-title" aria-label="頁面標題">
+          <section class="page-title" aria-label="頁面標題"
+                   data-tour-step="8"
+                   data-tour-title="進到篩選工作台"
+                   data-tour-content="這裡用來管理日報下拉選項與 repo 預設對應，先把常用選項整理好，確認日報會更快"
+                   data-tour-switch-page="filters"
+                   data-tour-placement="bottom">
             <div>
               <span class="eyebrow">Filter Workbench</span>
               <h1>篩選工作台</h1>
@@ -259,12 +243,23 @@
 
             <div class="tabbar" role="tablist" aria-label="篩選功能">
               <button id="quickFilterTab" class="tab-button is-active" type="button" role="tab" aria-selected="true" aria-controls="quickFilterPanel">常用下拉設定</button>
-              <button id="mappingSettingsTab" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="mappingSettingsPanel">預設對應設定</button>
+              <button id="mappingSettingsTab" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="mappingSettingsPanel"
+                      data-tour-step="11"
+                      data-tour-title="預設對應讓 repo 自動帶欄位"
+                      data-tour-content="切到這個頁籤後，可以把 repo 名稱固定對應到 PROJECT_CODE 與 PROCESS_TYPE"
+                      data-tour-switch-page="filters"
+                      data-tour-placement="bottom">預設對應設定</button>
             </div>
 
             <div id="quickFilterPanel" class="tab-panel is-active" role="tabpanel" aria-labelledby="quickFilterTab">
               <div class="option-filter-panel">
-                <div class="option-filter-intro">
+                <div class="option-filter-intro"
+                     data-tour-step="9"
+                     data-tour-title="常用下拉不是查詢篩選"
+                     data-tour-content="這裡控制日報欄位可以選哪些 PROJECT_CODE 與 PROCESS_TYPE，保存後會套用到日報確認與手動輸入"
+                     data-tour-before-click="#quickFilterTab"
+                     data-tour-switch-page="filters"
+                     data-tour-placement="bottom">
                   <div>
                     <h3>限制日報欄位可選項目</h3>
                     <p>勾選常用的 PROJECT_CODE 與 PROCESS_TYPE，日報確認、手KEY日報與預設對應設定只會顯示這些選項</p>
@@ -272,7 +267,13 @@
                   <span id="optionFilterSummary" class="option-filter-summary">顯示全部選項</span>
                 </div>
 
-                <div class="option-filter-grid">
+                <div class="option-filter-grid"
+                     data-tour-step="10"
+                     data-tour-title="勾選平常會用到的選項"
+                     data-tour-content="如果沒有勾選任何項目，系統會顯示全部選項；勾選後只顯示常用清單"
+                     data-tour-before-click="#quickFilterTab"
+                     data-tour-switch-page="filters"
+                     data-tour-placement="bottom">
                   <section class="option-filter-card">
                     <div class="option-filter-card-head">
                       <div>
@@ -324,7 +325,13 @@
             </div>
 
             <div id="mappingSettingsPanel" class="tab-panel" role="tabpanel" aria-labelledby="mappingSettingsTab">
-              <div class="panel-grid mapping-grid">
+              <div class="panel-grid mapping-grid"
+                   data-tour-step="12"
+                   data-tour-title="建立 repo 預設對應"
+                   data-tour-content="輸入專案名稱並選擇 PROJECT_CODE 與 PROCESS_TYPE，之後符合 repo 名稱的 commit 會自動帶入"
+                   data-tour-before-click="#mappingSettingsTab"
+                   data-tour-switch-page="filters"
+                   data-tour-placement="bottom">
                 <label>
                   <span>專案名稱</span>
                   <input id="mappingNameInput" type="text" placeholder="例如：HongCheng-Smart-Scheduler">
@@ -359,7 +366,12 @@
         </section>
 
         <section id="commitListPage" class="app-page" data-page="commits">
-          <section class="page-title" aria-label="頁面標題">
+          <section class="page-title" aria-label="頁面標題"
+                   data-tour-step="13"
+                   data-tour-title="Commit 清單是查詢頁"
+                   data-tour-content="這裡可以查看所有掃描到的 commit 與處理狀態，不會直接寫入日報"
+                   data-tour-switch-page="commits"
+                   data-tour-placement="bottom">
             <div>
               <span class="eyebrow">Commit List</span>
               <h1>Commit 清單</h1>
@@ -368,7 +380,12 @@
           </section>
 
           <section class="commit-list-layout">
-            <section class="commit-table-panel">
+            <section class="commit-table-panel"
+                     data-tour-step="14"
+                     data-tour-title="用條件查 Commit"
+                     data-tour-content="可以依狀態、專案、作者、關鍵字與時間範圍縮小清單，適合追查某筆 commit 是否已處理"
+                     data-tour-switch-page="commits"
+                     data-tour-placement="bottom">
               <div class="commit-filter-grid" aria-label="Commit 篩選條件">
                 <label>
                   <span>狀態</span>
@@ -418,7 +435,12 @@
               </div>
             </section>
 
-            <aside id="commitDetailPanel" class="commit-detail-panel" aria-label="Commit 詳細內容">
+            <aside id="commitDetailPanel" class="commit-detail-panel" aria-label="Commit 詳細內容"
+                   data-tour-step="15"
+                   data-tour-title="查看 Commit 詳細內容"
+                   data-tour-content="從清單點選一筆 commit 後，右側會顯示 branch、SHA、作者、subject 與 SUMMARY"
+                   data-tour-switch-page="commits"
+                   data-tour-placement="left">
               <div class="panel-block">
                 <span class="metric-label">Commit Detail</span>
                 <strong id="detailRepoName">尚未選取</strong>
@@ -445,7 +467,12 @@
         </section>
 
         <section id="configPage" class="app-page" data-page="config">
-          <section class="page-title" aria-label="設定頁標題">
+          <section class="page-title" aria-label="設定頁標題"
+                   data-tour-step="16"
+                   data-tour-title="進到系統設定"
+                   data-tour-content="設定頁管理本機掃描參數、排程與資料庫連線狀態，這些值會影響下一次掃描"
+                   data-tour-switch-page="config"
+                   data-tour-placement="bottom">
             <div>
               <span class="eyebrow">Config</span>
               <h1>系統設定</h1>
@@ -456,7 +483,12 @@
           <section class="config-layout" aria-label="系統設定內容">
             <section class="config-panel config-overview-panel">
               <div class="config-edit-entry">
-                <button id="openConfigModalButton" class="primary" type="button">編輯設定</button>
+                <button id="openConfigModalButton" class="primary" type="button"
+                        data-tour-step="17"
+                        data-tour-title="修改掃描與寫入參數"
+                        data-tour-content="按編輯設定可以調整 RepoRoot、作者、回溯天數、排程間隔與寫入人員"
+                        data-tour-switch-page="config"
+                        data-tour-placement="bottom">編輯設定</button>
               </div>
               <div class="section-head">
                 <div>
@@ -465,7 +497,12 @@
                 </div>
               </div>
 
-              <div class="config-summary-grid">
+              <div class="config-summary-grid"
+                   data-tour-step="18"
+                   data-tour-title="確認目前生效設定"
+                   data-tour-content="這裡會顯示目前掃描根目錄、Commit 作者、掃描排程、回溯天數與寫入人員"
+                   data-tour-switch-page="config"
+                   data-tour-placement="bottom">
                 <article class="config-summary-card config-summary-wide">
                   <span>掃描根目錄</span>
                   <strong id="configSummaryRepoRoot">-</strong>
@@ -508,14 +545,24 @@
                 </article>
               </div>
 
-              <div class="config-actions">
+              <div class="config-actions"
+                   data-tour-step="19"
+                   data-tour-title="保存後再套用排程"
+                   data-tour-content="修改排程間隔後，請用套用排程重新註冊 Windows Task Scheduler"
+                   data-tour-switch-page="config"
+                   data-tour-placement="top">
                 <button id="applyScheduleButton" class="secondary" type="button">套用排程</button>
                 <button id="reloadConfigButton" class="secondary" type="button">重新載入</button>
               </div>
               <p id="configMessage" class="message"></p>
             </section>
 
-            <aside class="config-side-panel" aria-label="設定狀態">
+            <aside class="config-side-panel" aria-label="設定狀態"
+                   data-tour-step="20"
+                   data-tour-title="檢查資料庫與設定檔狀態"
+                   data-tour-content="右側會顯示 SQL protected file、runtime config 路徑與連線設定指令範例"
+                   data-tour-switch-page="config"
+                   data-tour-placement="left">
               <div class="panel-block">
                 <span class="metric-label">資料庫狀態</span>
                 <strong id="configSqlStatus">載入中</strong>
@@ -649,7 +696,7 @@
   </template>
 
   <button id="activityTerminalButton" class="activity-terminal-button" type="button" aria-expanded="false" aria-controls="activityTerminal"
-          data-tour-step="11"
+          data-tour-step="21"
           data-tour-title="查看後台指令"
           data-tour-content="掃描時可以打開這個面板，確認後端正在跑哪些 git 指令與結果"
           data-tour-placement="left">
