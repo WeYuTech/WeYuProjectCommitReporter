@@ -598,6 +598,27 @@
     </article>
   </template>
 
+  <button id="activityTerminalButton" class="activity-terminal-button" type="button" aria-expanded="false" aria-controls="activityTerminal">
+    <span class="terminal-button-icon">&gt;_</span>
+    <strong id="activityTerminalBadge" hidden>0</strong>
+  </button>
+
+  <section id="activityTerminal" class="activity-terminal" hidden aria-hidden="true" aria-label="後台指令">
+    <header class="activity-terminal-head">
+      <div>
+        <span class="eyebrow">Runtime Terminal</span>
+        <h2>後台指令</h2>
+      </div>
+      <div class="activity-terminal-actions">
+        <button id="refreshActivityTerminalButton" class="icon-button" type="button" aria-label="重新整理後台指令">↻</button>
+        <button id="closeActivityTerminalButton" class="icon-button" type="button" aria-label="關閉後台指令">×</button>
+      </div>
+    </header>
+    <div id="activityTerminalList" class="activity-terminal-list" aria-live="polite">
+      <p class="activity-terminal-empty">尚未有後台活動</p>
+    </div>
+  </section>
+
   <script src="/app.js"></script>
 </body>
 </html>

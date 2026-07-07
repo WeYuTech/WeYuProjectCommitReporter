@@ -16,28 +16,47 @@ public interface IGitCommandRunner
     Task<GitCommandResult> RunAsync(string repositoryPath, string arguments, CancellationToken cancellationToken);
 }
 
-public sealed class ProcessGitCommandRunner : IGitCommandRunner
+public sealed class ProcessGitCommandRunner(ActivityLogService activityLog) : IGitCommandRunner
 {
     public async Task<GitCommandResult> RunAsync(string repositoryPath, string arguments, CancellationToken cancellationToken)
     {
-        var startInfo = new ProcessStartInfo
+        var commandText = $"git -C \"{repositoryPath}\" {arguments}";
+        var logId = activityLog.StartCommand(repositoryPath, commandText);
+        try
         {
-            FileName = "git",
-            Arguments = $"-C \"{repositoryPath}\" {arguments}",
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8
-        };
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "git",
+                Arguments = $"-C \"{repositoryPath}\" {arguments}",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8
+            };
 
-        using var process = Process.Start(startInfo) ?? throw new InvalidOperationException("Unable to start git.");
-        var stdoutTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
-        var stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
-        await process.WaitForExitAsync(cancellationToken);
+            using var process = Process.Start(startInfo);
+            if (process is null)
+            {
+                activityLog.CompleteCommand(logId, -1, "", "Unable to start git.");
+                throw new InvalidOperationException("Unable to start git.");
+            }
 
-        return new GitCommandResult(process.ExitCode, await stdoutTask, await stderrTask);
+            var stdoutTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
+            var stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
+            await process.WaitForExitAsync(cancellationToken);
+
+            var stdout = await stdoutTask;
+            var stderr = await stderrTask;
+            activityLog.CompleteCommand(logId, process.ExitCode, stdout, stderr);
+            return new GitCommandResult(process.ExitCode, stdout, stderr);
+        }
+        catch (Exception ex)
+        {
+            activityLog.CompleteCommand(logId, -1, "", ex.Message);
+            throw;
+        }
     }
 }
 

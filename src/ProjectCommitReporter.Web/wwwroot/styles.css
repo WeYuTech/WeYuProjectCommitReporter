@@ -1197,6 +1197,189 @@ label {
   display: none;
 }
 
+.activity-terminal-button {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 70;
+  display: inline-grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 1px solid #111111;
+  border-radius: 50%;
+  background: #111111;
+  color: #ffffff;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.22);
+}
+
+.activity-terminal-button:hover,
+.activity-terminal-button.is-running {
+  background: #0f8f6f;
+  border-color: #0f8f6f;
+}
+
+.terminal-button-icon {
+  font-family: Consolas, "Cascadia Mono", monospace;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.activity-terminal-button strong {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: #c2410c;
+  color: #ffffff;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.activity-terminal-button strong[hidden],
+.activity-terminal[hidden] {
+  display: none;
+}
+
+.activity-terminal {
+  position: fixed;
+  right: 22px;
+  bottom: 90px;
+  z-index: 75;
+  display: flex;
+  flex-direction: column;
+  width: min(520px, calc(100vw - 32px));
+  height: min(620px, calc(100vh - 126px));
+  overflow: hidden;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  background: #0b1020;
+  color: #dbeafe;
+  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.32);
+}
+
+.activity-terminal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex: 0 0 auto;
+  padding: 16px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  background: #111827;
+}
+
+.activity-terminal-head h2 {
+  margin-top: 3px;
+  color: #ffffff;
+  font-size: 17px;
+}
+
+.activity-terminal-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.activity-terminal-actions .icon-button {
+  background: #1f2937;
+  border-color: #374151;
+  color: #ffffff;
+}
+
+.activity-terminal-list {
+  display: grid;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px;
+  font-family: Consolas, "Cascadia Mono", monospace;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.activity-terminal-empty {
+  align-self: center;
+  justify-self: center;
+  color: #94a3b8;
+  font-family: "Segoe UI", "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+}
+
+.activity-log-item {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-left: 3px solid #64748b;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.88);
+}
+
+.activity-log-item.success {
+  border-left-color: #10b981;
+}
+
+.activity-log-item.error {
+  border-left-color: #ef4444;
+}
+
+.activity-log-item.warning {
+  border-left-color: #f59e0b;
+}
+
+.activity-log-item.is-running {
+  border-left-color: #38bdf8;
+}
+
+.activity-log-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.activity-log-meta span,
+.activity-log-meta time {
+  min-width: 0;
+}
+
+.activity-log-message {
+  color: #f8fafc;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.activity-log-command,
+.activity-log-output {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 6px;
+  background: #050816;
+  color: #bfdbfe;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.activity-log-output {
+  margin: 0;
+  color: #cbd5e1;
+}
+
+.activity-log-output.error {
+  color: #fecaca;
+}
+
 .config-modal {
   display: flex;
   flex-direction: column;
@@ -2283,6 +2466,20 @@ textarea:hover {
   .config-summary-grid,
   .config-grid {
     grid-template-columns: 1fr;
+  }
+
+  .activity-terminal-button {
+    right: 16px;
+    bottom: 16px;
+    width: 52px;
+    height: 52px;
+  }
+
+  .activity-terminal {
+    right: 12px;
+    bottom: 80px;
+    width: calc(100vw - 24px);
+    height: min(560px, calc(100vh - 104px));
   }
 
   .config-panel {

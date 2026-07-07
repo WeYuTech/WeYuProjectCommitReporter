@@ -31,6 +31,9 @@ const state = {
   processTypes: [],
   candidates: [],
   scanStatus: null,
+  activityLog: { entries: [], runningCount: 0 },
+  activityTerminalOpen: false,
+  activityTerminalTimer: null,
   mappingPresets: loadMappingPresets(),
   optionFilters: loadOptionFilters(),
   optionFilterDraft: null,
@@ -56,6 +59,12 @@ const elements = {
   headerRepoRoot: document.querySelector("#headerRepoRoot"),
   currentUserInitial: document.querySelector("#currentUserInitial"),
   currentUserName: document.querySelector("#currentUserName"),
+  activityTerminalButton: document.querySelector("#activityTerminalButton"),
+  activityTerminalBadge: document.querySelector("#activityTerminalBadge"),
+  activityTerminal: document.querySelector("#activityTerminal"),
+  closeActivityTerminalButton: document.querySelector("#closeActivityTerminalButton"),
+  refreshActivityTerminalButton: document.querySelector("#refreshActivityTerminalButton"),
+  activityTerminalList: document.querySelector("#activityTerminalList"),
   statusText: document.querySelector("#statusText"),
   scanButton: document.querySelector("#scanButton"),
   template: document.querySelector("#candidateTemplate"),
@@ -153,6 +162,9 @@ init();
 
 function bindEvents() {
   elements.scanButton.addEventListener("click", scanNow);
+  elements.activityTerminalButton.addEventListener("click", toggleActivityTerminal);
+  elements.closeActivityTerminalButton.addEventListener("click", closeActivityTerminal);
+  elements.refreshActivityTerminalButton.addEventListener("click", loadActivityLog);
   elements.navItems.forEach(item => {
     item.addEventListener("click", () => setCurrentPage(item.dataset.page));
   });
@@ -193,6 +205,9 @@ function bindEvents() {
     if (event.key === "Escape" && !elements.configModal.hidden) {
       closeConfigModal();
     }
+    if (event.key === "Escape" && state.activityTerminalOpen) {
+      closeActivityTerminal();
+    }
   });
   elements.saveConfigButton.addEventListener("click", saveConfig);
   elements.applyScheduleButton.addEventListener("click", applyScheduledTask);
@@ -218,6 +233,7 @@ async function init() {
   await refreshCandidates();
   await loadScanStatus();
   await loadConfig();
+  await loadActivityLog();
   renderApp();
 }
 
@@ -244,6 +260,7 @@ async function refreshCandidates() {
 async function scanNow() {
   elements.scanButton.disabled = true;
   elements.statusText.textContent = "正在掃描 Git commits...";
+  await loadActivityLog();
   try {
     const result = await fetchJson("/api/scan", { method: "POST" });
     elements.statusText.textContent = `掃描完成：新增 ${result.added} 筆，既有 ${result.existing} 筆`;
@@ -254,7 +271,131 @@ async function scanNow() {
     elements.statusText.textContent = `掃描失敗：${error.message}`;
   } finally {
     elements.scanButton.disabled = false;
+    await loadActivityLog();
   }
+}
+
+function toggleActivityTerminal() {
+  if (state.activityTerminalOpen) {
+    closeActivityTerminal();
+    return;
+  }
+
+  openActivityTerminal();
+}
+
+async function openActivityTerminal() {
+  state.activityTerminalOpen = true;
+  elements.activityTerminal.hidden = false;
+  elements.activityTerminal.setAttribute("aria-hidden", "false");
+  elements.activityTerminalButton.setAttribute("aria-expanded", "true");
+  await loadActivityLog();
+  state.activityTerminalTimer = window.setInterval(loadActivityLog, 1500);
+}
+
+function closeActivityTerminal() {
+  state.activityTerminalOpen = false;
+  elements.activityTerminal.hidden = true;
+  elements.activityTerminal.setAttribute("aria-hidden", "true");
+  elements.activityTerminalButton.setAttribute("aria-expanded", "false");
+  if (state.activityTerminalTimer) {
+    window.clearInterval(state.activityTerminalTimer);
+    state.activityTerminalTimer = null;
+  }
+}
+
+async function loadActivityLog() {
+  try {
+    state.activityLog = await fetchJson("/api/activity-log?take=160");
+    renderActivityTerminal();
+  } catch (error) {
+    state.activityLog = {
+      entries: [{
+        id: 0,
+        timestamp: new Date().toISOString(),
+        level: "Error",
+        source: "ui",
+        message: `活動紀錄載入失敗：${error.message}`,
+        isRunning: false
+      }],
+      runningCount: 0
+    };
+    renderActivityTerminal();
+  }
+}
+
+function renderActivityTerminal() {
+  const runningCount = state.activityLog?.runningCount ?? 0;
+  elements.activityTerminalBadge.hidden = runningCount === 0;
+  elements.activityTerminalBadge.textContent = String(runningCount);
+  elements.activityTerminalButton.classList.toggle("is-running", runningCount > 0);
+
+  const entries = state.activityLog?.entries || [];
+  elements.activityTerminalList.replaceChildren();
+  if (entries.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "activity-terminal-empty";
+    empty.textContent = "尚未有後台活動";
+    elements.activityTerminalList.append(empty);
+    return;
+  }
+
+  for (const entry of entries) {
+    elements.activityTerminalList.append(createActivityLogItem(entry));
+  }
+
+  elements.activityTerminalList.scrollTop = elements.activityTerminalList.scrollHeight;
+}
+
+function createActivityLogItem(entry) {
+  const item = document.createElement("article");
+  item.className = `activity-log-item ${normalizeActivityLevel(entry.level)}${entry.isRunning ? " is-running" : ""}`;
+
+  const meta = document.createElement("div");
+  meta.className = "activity-log-meta";
+
+  const time = document.createElement("time");
+  time.textContent = formatActivityTime(entry.timestamp);
+  meta.append(time);
+
+  const source = document.createElement("span");
+  source.textContent = entry.source || "system";
+  meta.append(source);
+
+  if (entry.exitCode !== null && entry.exitCode !== undefined) {
+    const exitCode = document.createElement("span");
+    exitCode.textContent = `exit ${entry.exitCode}`;
+    meta.append(exitCode);
+  }
+
+  const message = document.createElement("strong");
+  message.className = "activity-log-message";
+  message.textContent = entry.message || "-";
+
+  item.append(meta, message);
+
+  if (entry.command) {
+    const command = document.createElement("code");
+    command.className = "activity-log-command";
+    command.textContent = `$ ${entry.command}`;
+    item.append(command);
+  }
+
+  if (entry.output) {
+    const output = document.createElement("pre");
+    output.className = "activity-log-output";
+    output.textContent = entry.output;
+    item.append(output);
+  }
+
+  if (entry.error) {
+    const error = document.createElement("pre");
+    error.className = "activity-log-output error";
+    error.textContent = entry.error;
+    item.append(error);
+  }
+
+  return item;
 }
 
 function renderApp() {
@@ -1427,6 +1568,22 @@ function normalizeStatus(status) {
   }
 
   return status || "Pending";
+}
+
+function normalizeActivityLevel(level) {
+  return String(level || "Info").toLowerCase();
+}
+
+function formatActivityTime(value) {
+  if (!value) {
+    return "--:--:--";
+  }
+
+  return new Date(value).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
 }
 
 function setMessage(element, text, className) {

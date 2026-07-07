@@ -160,3 +160,26 @@ public sealed record ConfigDefaultsResponse(
 public sealed record ScheduledTaskApplyRequest(int ScheduleMinutes);
 
 public sealed record ScheduledTaskApplyResult(bool Succeeded, int ScheduleMinutes, string Message);
+
+public enum ActivityLogLevel
+{
+    Info,
+    Success,
+    Warning,
+    Error
+}
+
+public sealed record ActivityLogEntry(
+    long Id,
+    DateTimeOffset Timestamp,
+    ActivityLogLevel Level,
+    string Source,
+    string Message,
+    string? Command = null,
+    string? RepositoryPath = null,
+    int? ExitCode = null,
+    string? Output = null,
+    string? Error = null,
+    bool IsRunning = false);
+
+public sealed record ActivityLogResponse(IReadOnlyList<ActivityLogEntry> Entries, int RunningCount);

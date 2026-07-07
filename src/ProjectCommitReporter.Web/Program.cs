@@ -16,6 +16,7 @@ var statePath = reporterOptions.ResolvePath(appPaths.StorageRoot, reporterOption
 builder.Services.AddSingleton(appPaths);
 builder.Services.AddSingleton<IReporterConfigService>(_ => new RuntimeConfigService(reporterOptions, appPaths.StorageRoot));
 builder.Services.AddSingleton<IClock, SystemClock>();
+builder.Services.AddSingleton<ActivityLogService>();
 builder.Services.AddSingleton<SummaryGenerator>();
 builder.Services.AddSingleton<SummaryTranslator>();
 builder.Services.AddSingleton<CandidateFactory>();
@@ -96,6 +97,11 @@ app.MapGet("/api/candidates", async (string? status, ReporterService service, Ca
 app.MapGet("/api/scan-status", async (ReporterService service, CancellationToken cancellationToken) =>
 {
     return Results.Ok(await service.GetScanStatusAsync(cancellationToken));
+});
+
+app.MapGet("/api/activity-log", (int? take, ActivityLogService activityLog) =>
+{
+    return Results.Ok(activityLog.GetRecent(take ?? 160));
 });
 
 app.MapGet("/api/options/projects", async (ReporterService service, CancellationToken cancellationToken) =>

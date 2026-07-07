@@ -5,15 +5,27 @@ public sealed class ReporterService(
     IGitScanner scanner,
     CandidateStateService stateService,
     IProjectRepository projectRepository,
-    IClock clock)
+    IClock clock,
+    ActivityLogService activityLog)
 {
     public async Task<CandidateUpsertResult> ScanAsync(CancellationToken cancellationToken)
     {
         var options = configService.GetCurrent();
         var today = clock.Today.ToDateTime(TimeOnly.MinValue);
         var since = new DateTimeOffset(today).AddDays(-Math.Max(0, options.ScanLookbackDays));
-        var scan = await scanner.ScanAsync(options.RepoRoot, options.GitAuthorName, since, cancellationToken);
-        return await stateService.UpsertCommitsAsync(scan.Commits, scan.Status, cancellationToken);
+        activityLog.Info("scan", $"Scan started. Root={options.RepoRoot}; Author={options.GitAuthorName}; Since={since:yyyy-MM-dd HH:mm:ss zzz}");
+        try
+        {
+            var scan = await scanner.ScanAsync(options.RepoRoot, options.GitAuthorName, since, cancellationToken);
+            var result = await stateService.UpsertCommitsAsync(scan.Commits, scan.Status, cancellationToken);
+            activityLog.Success("scan", $"Scan completed. Added={result.Added}; Existing={result.Existing}; Repositories={scan.Status.RepositoryCount}; Failures={scan.Status.FailureCount}");
+            return result;
+        }
+        catch (Exception ex)
+        {
+            activityLog.Error("scan", "Scan failed", ex.Message);
+            throw;
+        }
     }
 
     public Task<IReadOnlyList<CandidateRecord>> ListCandidatesAsync(CandidateStatus? status, CancellationToken cancellationToken)
