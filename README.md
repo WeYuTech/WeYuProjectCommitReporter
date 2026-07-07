@@ -69,7 +69,7 @@ $env:PROJECT_REPORTER_DOTNET_EXE = "C:\Users\rdpuser\.dotnet\dotnet.exe"
 連線字串會用 Windows DPAPI 加密後存在本機 `data\connection-string.protected`，不會寫進程式碼。
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Set-ConnectionString.ps1 -ConnectionString "Data Source=YOUR_SQL_SERVER,1433;Initial Catalog=WeyutechV6;User ID=YOUR_USER;Password=YOUR_PASSWORD;TrustServerCertificate=True;Encrypt=False"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Set-ConnectionString.ps1 -ConnectionString "Data Source=10.0.20.20,1433;Initial Catalog=WeyutechV6;User ID=sa;Password=Weyu0401~;TrustServerCertificate=True;Encrypt=False"
 ```
 
 請把 `YOUR_SQL_SERVER`、`YOUR_USER`、`YOUR_PASSWORD` 換成實際值。
