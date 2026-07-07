@@ -1688,12 +1688,15 @@ textarea {
 
 .commit-table {
   width: 100%;
+  min-width: 920px;
   border-collapse: collapse;
   font-size: 13px;
+  table-layout: fixed;
 }
 
 .commit-table th,
 .commit-table td {
+  overflow: hidden;
   padding: 11px 12px;
   border-bottom: 1px solid var(--line);
   text-align: left;
@@ -1717,7 +1720,7 @@ textarea {
 }
 
 .commit-subject-cell {
-  min-width: 260px;
+  min-width: 0;
 }
 
 .commit-subject-cell strong,
@@ -1728,6 +1731,8 @@ textarea {
 .commit-subject-cell strong {
   color: var(--text);
   line-height: 1.35;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .commit-subject-cell small {
@@ -2391,10 +2396,6 @@ textarea:hover {
   accent-color: #111111;
 }
 
-.commit-table {
-  table-layout: fixed;
-}
-
 .commit-table th:nth-child(1),
 .commit-table td:nth-child(1) {
   width: 88px;
@@ -2402,22 +2403,28 @@ textarea:hover {
 
 .commit-table th:nth-child(2),
 .commit-table td:nth-child(2) {
-  width: 104px;
+  width: 170px;
+}
+
+.commit-table td:nth-child(2),
+.commit-table td:nth-child(5) {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .commit-table th:nth-child(4),
 .commit-table td:nth-child(4) {
-  width: 118px;
+  width: 138px;
 }
 
 .commit-table th:nth-child(5),
 .commit-table td:nth-child(5) {
-  width: 84px;
+  width: 112px;
 }
 
 .commit-table th:nth-child(6),
 .commit-table td:nth-child(6) {
-  width: 82px;
+  width: 78px;
 }
 
 .commit-table td {
@@ -2551,12 +2558,12 @@ textarea:hover {
 
   .commit-table th:nth-child(2),
   .commit-table td:nth-child(2) {
-    width: 104px;
+    width: 150px;
   }
 
   .commit-table th:nth-child(4),
   .commit-table td:nth-child(4) {
-    width: 112px;
+    width: 132px;
   }
 
   .commit-table th:nth-child(6),
