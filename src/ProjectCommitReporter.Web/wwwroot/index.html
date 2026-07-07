@@ -6,7 +6,7 @@
   <title>工作項目救星</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
-<body>
+<body data-tour-page="commit-reporter" data-tour-auto="first">
   <div class="app-shell">
     <aside class="sidebar" aria-label="主選單">
       <div class="sidebar-brand">
@@ -20,15 +20,27 @@
           <span class="nav-icon">01</span>
           <span>日報確認</span>
         </button>
-        <button class="nav-item" type="button" data-page="filters">
+        <button class="nav-item" type="button" data-page="filters"
+                data-tour-step="8"
+                data-tour-title="先設定常用選項"
+                data-tour-content="篩選工作台可以限制 PROJECT_CODE 與 PROCESS_TYPE 下拉選項，也能設定 repo 預設對應"
+                data-tour-placement="right">
           <span class="nav-icon">02</span>
           <span>篩選工作台</span>
         </button>
-        <button class="nav-item" type="button" data-page="commits">
+        <button class="nav-item" type="button" data-page="commits"
+                data-tour-step="9"
+                data-tour-title="查詢所有 Commit"
+                data-tour-content="Commit 清單用來查詢已掃描資料與處理狀態，不會直接寫入日報"
+                data-tour-placement="right">
           <span class="nav-icon">03</span>
           <span>Commit 清單</span>
         </button>
-        <button class="nav-item" type="button" data-page="config">
+        <button class="nav-item" type="button" data-page="config"
+                data-tour-step="10"
+                data-tour-title="調整系統設定"
+                data-tour-content="設定頁可以修改掃描根目錄、作者、回溯天數、排程間隔與寫入人員"
+                data-tour-placement="right">
           <span class="nav-icon">04</span>
           <span>設定</span>
         </button>
@@ -46,7 +58,11 @@
       <header class="topbar">
         <div class="topbar-left">
           <button class="icon-button" type="button" aria-label="查看路徑">⌕</button>
-          <div class="search-shell">
+          <div class="search-shell"
+               data-tour-step="2"
+               data-tour-title="確認掃描根目錄"
+               data-tour-content="這裡顯示目前會被掃描的根目錄，系統會從這個資料夾往下找 Git repository"
+               data-tour-placement="bottom">
             <span>⌕</span>
             <strong id="headerRepoRoot">載入掃描根目錄中</strong>
           </div>
@@ -54,7 +70,12 @@
 
         <div class="toolbar">
           <p id="statusText">正在載入候選資料...</p>
-          <button id="scanButton" class="primary" type="button">立即掃描</button>
+          <button id="startTourButton" class="secondary" type="button" data-tour-start>教學</button>
+          <button id="scanButton" class="primary" type="button"
+                  data-tour-step="3"
+                  data-tour-title="需要時手動掃描"
+                  data-tour-content="按立即掃描會執行後端 Git 掃描，只產生候選資料，不會自動寫入資料庫"
+                  data-tour-placement="bottom">立即掃描</button>
           <div class="user-chip" aria-label="目前使用者">
             <span id="currentUserInitial">-</span>
             <strong id="currentUserName">載入中</strong>
@@ -63,15 +84,28 @@
 
         <nav class="mobile-nav" aria-label="功能切換">
           <button class="nav-item is-active" type="button" data-page="review">日報確認</button>
-          <button class="nav-item" type="button" data-page="filters">篩選工作台</button>
-          <button class="nav-item" type="button" data-page="commits">Commit 清單</button>
-          <button class="nav-item" type="button" data-page="config">設定</button>
+          <button class="nav-item" type="button" data-page="filters"
+                  data-tour-step="8"
+                  data-tour-title="先設定常用選項"
+                  data-tour-content="篩選工作台可以限制 PROJECT_CODE 與 PROCESS_TYPE 下拉選項，也能設定 repo 預設對應">篩選工作台</button>
+          <button class="nav-item" type="button" data-page="commits"
+                  data-tour-step="9"
+                  data-tour-title="查詢所有 Commit"
+                  data-tour-content="Commit 清單用來查詢已掃描資料與處理狀態，不會直接寫入日報">Commit 清單</button>
+          <button class="nav-item" type="button" data-page="config"
+                  data-tour-step="10"
+                  data-tour-title="調整系統設定"
+                  data-tour-content="設定頁可以修改掃描根目錄、作者、回溯天數、排程間隔與寫入人員">設定</button>
         </nav>
       </header>
 
       <main class="content">
         <section id="reportReviewPage" class="app-page is-active" data-page="review">
-          <section class="page-title" aria-label="頁面標題">
+          <section class="page-title" aria-label="頁面標題"
+                   data-tour-step="1"
+                   data-tour-title="先看這個系統在做什麼"
+                   data-tour-content="這套工具會把 Git commit 轉成待確認日報，確認後才寫進專案管理"
+                   data-tour-placement="bottom">
             <div>
               <span class="eyebrow">Report Review</span>
               <h1>Review Commit</h1>
@@ -80,7 +114,11 @@
             <div id="activeFilterBadge" class="active-filter-badge">常用下拉：顯示全部</div>
           </section>
 
-          <section class="metric-grid" aria-label="目前統計">
+          <section class="metric-grid" aria-label="目前統計"
+                   data-tour-step="4"
+                   data-tour-title="先看目前狀態"
+                   data-tour-content="這四張統計卡會讓你快速知道有多少待確認、已寫入、已略過與預設對應"
+                   data-tour-placement="bottom">
             <article class="metric-card">
               <span class="metric-label">待確認</span>
               <strong id="pendingMetric">0</strong>
@@ -108,7 +146,11 @@
           </section>
 
           <section class="report-entry-panel" aria-label="日報確認輸入方式">
-            <div class="tabbar report-tabbar" role="tablist" aria-label="日報輸入方式">
+            <div class="tabbar report-tabbar" role="tablist" aria-label="日報輸入方式"
+                 data-tour-step="5"
+                 data-tour-title="選擇日報來源"
+                 data-tour-content="Git Commit 是掃描後的候選日報，手動輸入則用在沒有 commit 的工作"
+                 data-tour-placement="bottom">
               <button id="reportGitTab" class="tab-button is-active" type="button" role="tab" aria-selected="true" aria-controls="reportGitPanel">Git Commit</button>
               <button id="reportManualTab" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="reportManualPanel">手動輸入</button>
             </div>
@@ -122,10 +164,18 @@
                       <p>這裡只顯示需要寫入或略過的項目</p>
                     </div>
                   </div>
-                  <section id="candidateList" class="candidate-list" aria-live="polite"></section>
+                  <section id="candidateList" class="candidate-list" aria-live="polite"
+                           data-tour-step="6"
+                           data-tour-title="逐筆確認 Commit"
+                           data-tour-content="每筆 commit 可以選 PROJECT_CODE、PROCESS_TYPE、調整 SUMMARY，再決定寫入或略過"
+                           data-tour-placement="right"></section>
                 </section>
 
-                <aside class="info-panel" aria-label="掃描狀態">
+                <aside class="info-panel" aria-label="掃描狀態"
+                       data-tour-step="7"
+                       data-tour-title="檢查掃描狀態"
+                       data-tour-content="如果候選資料沒有出現，先看這裡確認最近掃描時間、repo 狀態與 fetch 是否失敗"
+                       data-tour-placement="left">
                   <div class="panel-block scan-status-block">
                     <span class="metric-label">最近掃描</span>
                     <strong id="lastScanTime">尚未掃描</strong>
@@ -598,7 +648,11 @@
     </article>
   </template>
 
-  <button id="activityTerminalButton" class="activity-terminal-button" type="button" aria-expanded="false" aria-controls="activityTerminal">
+  <button id="activityTerminalButton" class="activity-terminal-button" type="button" aria-expanded="false" aria-controls="activityTerminal"
+          data-tour-step="11"
+          data-tour-title="查看後台指令"
+          data-tour-content="掃描時可以打開這個面板，確認後端正在跑哪些 git 指令與結果"
+          data-tour-placement="left">
     <span class="terminal-button-icon">&gt;_</span>
     <strong id="activityTerminalBadge" hidden>0</strong>
   </button>
@@ -619,6 +673,7 @@
     </div>
   </section>
 
+  <script src="/guided-tour.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>

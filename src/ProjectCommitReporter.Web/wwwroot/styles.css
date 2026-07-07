@@ -1391,6 +1391,117 @@ label {
   color: #fecaca;
 }
 
+[data-tour-host][hidden] {
+  display: none;
+}
+
+.guided-tour-backdrop {
+  position: fixed;
+  z-index: 1000;
+  background: rgba(17, 17, 17, 0.62);
+  backdrop-filter: blur(1px);
+  pointer-events: auto;
+}
+
+.guided-tour-card {
+  position: fixed;
+  z-index: 1003;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  padding: 18px;
+  border: 1px solid #deded8;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #111111;
+  box-shadow: 0 24px 70px rgba(17, 17, 17, 0.26);
+}
+
+.guided-tour-card h2 {
+  margin: 4px 28px 8px 0;
+  color: #111111;
+  font-size: 17px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.guided-tour-card p {
+  margin: 0 0 16px;
+  color: #565650;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.guided-tour-progress {
+  margin-bottom: 4px;
+  color: #0f8f6f;
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+.guided-tour-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.guided-tour-actions button {
+  min-height: 34px;
+  padding: 0 12px;
+}
+
+.guided-tour-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: transparent;
+}
+
+.guided-tour-close::before,
+.guided-tour-close::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 2px;
+  border-radius: 999px;
+  background: #6f6f68;
+  content: "";
+}
+
+.guided-tour-close::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.guided-tour-close::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.guided-tour-close:hover {
+  border-radius: 999px;
+  background: #f1f1ec;
+}
+
+.guided-tour-target {
+  z-index: 1002 !important;
+  border-radius: 8px;
+  outline: 3px solid #10a37f;
+  outline-offset: 4px;
+  box-shadow: 0 0 0 8px rgba(16, 163, 127, 0.18), 0 18px 45px rgba(17, 17, 17, 0.18);
+}
+
+.guided-tour-target:not(.activity-terminal-button) {
+  position: relative !important;
+}
+
+#startTourButton {
+  white-space: nowrap;
+}
+
 .config-modal {
   display: flex;
   flex-direction: column;
@@ -2333,7 +2444,7 @@ textarea:hover {
   }
 
   .toolbar {
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
     align-items: center;
     gap: 10px;
   }
@@ -2344,6 +2455,11 @@ textarea:hover {
   }
 
   .toolbar button.primary {
+    min-height: 34px;
+    padding: 0 13px;
+  }
+
+  .toolbar button.secondary {
     min-height: 34px;
     padding: 0 13px;
   }
@@ -2524,5 +2640,13 @@ textarea:hover {
 
   .config-modal-actions button {
     width: 100%;
+  }
+
+  .guided-tour-card {
+    right: 16px !important;
+    bottom: 16px !important;
+    left: 16px !important;
+    top: auto !important;
+    width: auto;
   }
 }
