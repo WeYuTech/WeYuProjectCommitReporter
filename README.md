@@ -1,12 +1,18 @@
 # 工作項目救星 使用說明
 
-工作項目救星是一個本機使用的 Git 日報輔助工具。它會掃描 `C:\Users\rdpuser\RiderProjects` 底下的 Git 專案，把每天已 commit 的工作整理成日報候選資料。你在網頁確認後，才會寫入 `WeyutechV6.dbo.BAS_PROJECT_MAINTAIN_DETAIL`。
+工作項目救星是一個本機使用的 Git 日報輔助工具。它會依照系統設定中的 `RepoRoot` 掃描底下的 Git 專案，把每天已 commit 的工作整理成日報候選資料。你在網頁確認後，才會寫入 `WeyutechV6.dbo.BAS_PROJECT_MAINTAIN_DETAIL`。
 
 網頁預設只開在本機：
 
 ```text
 http://127.0.0.1:5147
 ```
+
+## 畫面預覽
+
+![日報確認主畫面](docs/images/review-commit-page.png)
+
+主畫面會集中顯示待確認 Commit、目前掃描統計、最近掃描狀態與右下角後台指令入口。使用者可以先按「立即掃描」更新候選資料，再逐筆確認 `PROJECT_CODE`、`PROCESS_TYPE` 與 `SUMMARY`，確認後才會寫入專案管理。
 
 ## 主要功能
 
@@ -270,7 +276,8 @@ FILE_NAME = NULL
 
 ## 掃描規則
 
-- 掃描根目錄預設為 `C:\Users\rdpuser\RiderProjects`。
+- 掃描根目錄以「設定」頁目前顯示的 `RepoRoot` 為準。
+- 程式預設值為 `C:\Users\rdpuser\RiderProjects`，可在網頁設定中改成其他 Git repository 集中資料夾。
 - 只掃 Git repo。
 - 掃描前會先 `git fetch --prune`。
 - 有 upstream 時掃 upstream ref，例如 `origin/main`。
@@ -347,6 +354,7 @@ project-commit-reporter
 │  └─ ProjectCommitReporter.Web     # 本機 Web UI 與 API
 ├─ tests                            # xUnit 測試
 ├─ scripts                          # 啟動、掃描、測試、排程與連線設定腳本
+├─ docs                             # README 圖片與文件素材
 ├─ data                             # 本機狀態與加密連線字串，不提交 Git
 └─ README.md
 ```
