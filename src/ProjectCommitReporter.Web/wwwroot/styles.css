@@ -229,6 +229,14 @@ h2 {
   min-width: 0;
 }
 
+.topbar-left {
+  flex: 1 1 auto;
+}
+
+.toolbar {
+  flex: 0 0 auto;
+}
+
 .mobile-nav {
   display: none;
 }
@@ -246,7 +254,9 @@ h2 {
   align-items: center;
   gap: 10px;
   min-height: 38px;
-  width: min(420px, 34vw);
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 280px;
   padding: 0 14px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -255,10 +265,11 @@ h2 {
 }
 
 .search-shell strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
   font-size: 13px;
+  line-height: 1.35;
 }
 
 #statusText {
