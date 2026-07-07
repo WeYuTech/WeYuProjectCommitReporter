@@ -1,7 +1,9 @@
 using ProjectCommitReporter.Core;
+using ProjectCommitReporter.Web;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+var appPaths = AppPaths.Create(builder.Environment.ContentRootPath);
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -9,9 +11,10 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 var reporterOptions = builder.Configuration.GetSection("Reporter").Get<ReporterOptions>() ?? new ReporterOptions();
-var statePath = reporterOptions.ResolvePath(builder.Environment.ContentRootPath, reporterOptions.StatePath);
+var statePath = reporterOptions.ResolvePath(appPaths.StorageRoot, reporterOptions.StatePath);
 
-builder.Services.AddSingleton(reporterOptions);
+builder.Services.AddSingleton(appPaths);
+builder.Services.AddSingleton<IReporterConfigService>(_ => new RuntimeConfigService(reporterOptions, appPaths.StorageRoot));
 builder.Services.AddSingleton<IClock, SystemClock>();
 builder.Services.AddSingleton<SummaryGenerator>();
 builder.Services.AddSingleton<SummaryTranslator>();
@@ -20,10 +23,11 @@ builder.Services.AddSingleton<IStateStore>(_ => new JsonStateStore(statePath));
 builder.Services.AddSingleton<CandidateStateService>();
 builder.Services.AddSingleton<IGitCommandRunner, ProcessGitCommandRunner>();
 builder.Services.AddSingleton<IGitScanner, GitScanner>();
-builder.Services.AddSingleton<IConnectionStringProvider>(_ =>
-    new ProtectedConnectionStringProvider(reporterOptions, builder.Environment.ContentRootPath));
+builder.Services.AddSingleton<IConnectionStringProvider>(provider =>
+    new ProtectedConnectionStringProvider(provider.GetRequiredService<IReporterConfigService>(), appPaths.StorageRoot));
 builder.Services.AddSingleton<IProjectRepository, SqlProjectRepository>();
 builder.Services.AddSingleton<ReporterService>();
+builder.Services.AddSingleton<ScheduledTaskService>();
 
 var app = builder.Build();
 
@@ -38,6 +42,39 @@ if (args.Any(arg => string.Equals(arg, "--scan", StringComparison.OrdinalIgnoreC
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
+
+app.MapGet("/api/config", (IReporterConfigService configService) =>
+{
+    return Results.Ok(configService.GetResponse());
+});
+
+app.MapPut("/api/config", (UpdateConfigRequest request, IReporterConfigService configService) =>
+{
+    try
+    {
+        return Results.Ok(configService.Save(request));
+    }
+    catch (ArgumentException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+app.MapPost("/api/config/scheduled-task", async (
+    ScheduledTaskApplyRequest request,
+    ScheduledTaskService scheduledTaskService,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var result = await scheduledTaskService.ApplyAsync(request.ScheduleMinutes, cancellationToken);
+        return result.Succeeded ? Results.Ok(result) : Results.BadRequest(new { error = result.Message });
+    }
+    catch (ArgumentException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
 
 app.MapPost("/api/scan", async (ReporterService service, CancellationToken cancellationToken) =>
 {

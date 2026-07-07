@@ -9,7 +9,7 @@ public interface IConnectionStringProvider
     string GetConnectionString();
 }
 
-public sealed class ProtectedConnectionStringProvider(ReporterOptions options, string contentRoot) : IConnectionStringProvider
+public sealed class ProtectedConnectionStringProvider(IReporterConfigService configService, string contentRoot) : IConnectionStringProvider
 {
     [SupportedOSPlatform("windows")]
     public string GetConnectionString()
@@ -20,6 +20,7 @@ public sealed class ProtectedConnectionStringProvider(ReporterOptions options, s
             return environmentValue;
         }
 
+        var options = configService.GetCurrent();
         if (!string.IsNullOrWhiteSpace(options.SqlConnectionString))
         {
             return options.SqlConnectionString;

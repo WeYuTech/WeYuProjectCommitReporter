@@ -8,9 +8,11 @@ public sealed class ReporterOptions
     public string GitAuthorName { get; set; } = "Andy";
     public string GitAuthorEmail { get; set; } = "lol901111@yahoo.com.tw";
     public string StatePath { get; set; } = "data/state.json";
+    public string RuntimeConfigPath { get; set; } = "data/runtime-settings.json";
     public string ProtectedConnectionStringPath { get; set; } = "data/connection-string.protected";
     public string? SqlConnectionString { get; set; }
     public int ScanLookbackDays { get; set; }
+    public int ScheduleMinutes { get; set; } = 5;
 
     public string ResolvePath(string contentRoot, string path)
     {
@@ -112,3 +114,49 @@ public sealed record TranslateSummaryRequest(string Summary);
 public sealed record TranslateSummaryResponse(string Summary);
 
 public sealed record CandidateUpsertResult(int Added, int Existing, IReadOnlyList<CandidateRecord> Candidates, ScanStatus? ScanStatus = null);
+
+public sealed class RuntimeConfigDocument
+{
+    public string? RepoRoot { get; set; }
+    public string? PrincipalUser { get; set; }
+    public string? AuditUser { get; set; }
+    public string? GitAuthorName { get; set; }
+    public string? GitAuthorEmail { get; set; }
+    public int? ScanLookbackDays { get; set; }
+    public int? ScheduleMinutes { get; set; }
+}
+
+public sealed record UpdateConfigRequest(
+    string RepoRoot,
+    string PrincipalUser,
+    string AuditUser,
+    string GitAuthorName,
+    string GitAuthorEmail,
+    int ScanLookbackDays,
+    int ScheduleMinutes);
+
+public sealed record ConfigResponse(
+    string RepoRoot,
+    string PrincipalUser,
+    string AuditUser,
+    string GitAuthorName,
+    string GitAuthorEmail,
+    int ScanLookbackDays,
+    int ScheduleMinutes,
+    string RuntimeConfigPath,
+    string ProtectedConnectionStringPath,
+    bool SqlConnectionConfigured,
+    ConfigDefaultsResponse Defaults);
+
+public sealed record ConfigDefaultsResponse(
+    string RepoRoot,
+    string PrincipalUser,
+    string AuditUser,
+    string GitAuthorName,
+    string GitAuthorEmail,
+    int ScanLookbackDays,
+    int ScheduleMinutes);
+
+public sealed record ScheduledTaskApplyRequest(int ScheduleMinutes);
+
+public sealed record ScheduledTaskApplyResult(bool Succeeded, int ScheduleMinutes, string Message);

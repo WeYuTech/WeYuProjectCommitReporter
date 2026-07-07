@@ -1,7 +1,7 @@
 namespace ProjectCommitReporter.Core;
 
 public sealed class ReporterService(
-    ReporterOptions options,
+    IReporterConfigService configService,
     IGitScanner scanner,
     CandidateStateService stateService,
     IProjectRepository projectRepository,
@@ -9,6 +9,7 @@ public sealed class ReporterService(
 {
     public async Task<CandidateUpsertResult> ScanAsync(CancellationToken cancellationToken)
     {
+        var options = configService.GetCurrent();
         var today = clock.Today.ToDateTime(TimeOnly.MinValue);
         var since = new DateTimeOffset(today).AddDays(-Math.Max(0, options.ScanLookbackDays));
         var scan = await scanner.ScanAsync(options.RepoRoot, options.GitAuthorName, since, cancellationToken);
@@ -59,6 +60,7 @@ public sealed class ReporterService(
 
         var candidate = await stateService.GetPendingAsync(id, cancellationToken);
         var workDate = DateOnly.FromDateTime(candidate.CommitTime.LocalDateTime);
+        var options = configService.GetCurrent();
 
         var insert = new ProjectDetailInsert(
             request.ProjectCode.Trim(),
@@ -94,6 +96,7 @@ public sealed class ReporterService(
             throw new ArgumentException("WORK_DATE is required.", nameof(request));
         }
 
+        var options = configService.GetCurrent();
         var insert = new ProjectDetailInsert(
             request.ProjectCode.Trim(),
             request.ProcessType.Trim(),

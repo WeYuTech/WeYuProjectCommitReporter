@@ -1,5 +1,6 @@
 const STORAGE_KEYS = Object.freeze({
-  mappingPresets: "projectCommitReporter.mappingPresets.v1"
+  mappingPresets: "projectCommitReporter.mappingPresets.v1",
+  optionFilters: "projectCommitReporter.optionFilters.v1"
 });
 
 const QUERY_PARAM_NAMES = Object.freeze({
@@ -11,7 +12,8 @@ const QUERY_PARAM_NAMES = Object.freeze({
 const PAGE_IDS = Object.freeze({
   review: "review",
   filters: "filters",
-  commits: "commits"
+  commits: "commits",
+  config: "config"
 });
 
 const TAB_IDS = Object.freeze({
@@ -30,6 +32,9 @@ const state = {
   candidates: [],
   scanStatus: null,
   mappingPresets: loadMappingPresets(),
+  optionFilters: loadOptionFilters(),
+  optionFilterDraft: null,
+  config: null,
   activeFilter: readFilterFromUrl(),
   currentPage: readPageFromUrl(),
   commitFilters: {
@@ -73,11 +78,23 @@ const elements = {
   mappingSettingsTab: document.querySelector("#mappingSettingsTab"),
   quickFilterPanel: document.querySelector("#quickFilterPanel"),
   mappingSettingsPanel: document.querySelector("#mappingSettingsPanel"),
-  quickMappingSelect: document.querySelector("#quickMappingSelect"),
-  quickProjectSelect: document.querySelector("#quickProjectSelect"),
-  quickProcessSelect: document.querySelector("#quickProcessSelect"),
-  openFilteredPageButton: document.querySelector("#openFilteredPageButton"),
-  clearFilterButton: document.querySelector("#clearFilterButton"),
+  optionFilterSummary: document.querySelector("#optionFilterSummary"),
+  projectOptionFilterButton: document.querySelector("#projectOptionFilterButton"),
+  projectOptionFilterText: document.querySelector("#projectOptionFilterText"),
+  projectOptionFilterMenu: document.querySelector("#projectOptionFilterMenu"),
+  projectOptionFilterSearch: document.querySelector("#projectOptionFilterSearch"),
+  projectOptionFilterList: document.querySelector("#projectOptionFilterList"),
+  processOptionFilterButton: document.querySelector("#processOptionFilterButton"),
+  processOptionFilterText: document.querySelector("#processOptionFilterText"),
+  processOptionFilterMenu: document.querySelector("#processOptionFilterMenu"),
+  processOptionFilterSearch: document.querySelector("#processOptionFilterSearch"),
+  processOptionFilterList: document.querySelector("#processOptionFilterList"),
+  selectAllProjectOptionsButton: document.querySelector("#selectAllProjectOptionsButton"),
+  clearProjectOptionsButton: document.querySelector("#clearProjectOptionsButton"),
+  selectAllProcessOptionsButton: document.querySelector("#selectAllProcessOptionsButton"),
+  clearProcessOptionsButton: document.querySelector("#clearProcessOptionsButton"),
+  saveOptionFiltersButton: document.querySelector("#saveOptionFiltersButton"),
+  resetOptionFiltersButton: document.querySelector("#resetOptionFiltersButton"),
   mappingNameInput: document.querySelector("#mappingNameInput"),
   mappingProjectSelect: document.querySelector("#mappingProjectSelect"),
   mappingProcessSelect: document.querySelector("#mappingProcessSelect"),
@@ -97,7 +114,31 @@ const elements = {
   detailSha: document.querySelector("#detailSha"),
   detailAuthor: document.querySelector("#detailAuthor"),
   detailSubject: document.querySelector("#detailSubject"),
-  detailSummary: document.querySelector("#detailSummary")
+  detailSummary: document.querySelector("#detailSummary"),
+  configSummaryRepoRoot: document.querySelector("#configSummaryRepoRoot"),
+  configSummaryAuthor: document.querySelector("#configSummaryAuthor"),
+  configSummarySchedule: document.querySelector("#configSummarySchedule"),
+  configSummaryLookback: document.querySelector("#configSummaryLookback"),
+  configSummaryUsers: document.querySelector("#configSummaryUsers"),
+  configModal: document.querySelector("#configModal"),
+  openConfigModalButton: document.querySelector("#openConfigModalButton"),
+  closeConfigModalButton: document.querySelector("#closeConfigModalButton"),
+  cancelConfigButton: document.querySelector("#cancelConfigButton"),
+  configRepoRootInput: document.querySelector("#configRepoRootInput"),
+  configGitAuthorNameInput: document.querySelector("#configGitAuthorNameInput"),
+  configGitAuthorEmailInput: document.querySelector("#configGitAuthorEmailInput"),
+  configScanLookbackDaysInput: document.querySelector("#configScanLookbackDaysInput"),
+  configScheduleMinutesInput: document.querySelector("#configScheduleMinutesInput"),
+  configPrincipalUserInput: document.querySelector("#configPrincipalUserInput"),
+  configAuditUserInput: document.querySelector("#configAuditUserInput"),
+  saveConfigButton: document.querySelector("#saveConfigButton"),
+  applyScheduleButton: document.querySelector("#applyScheduleButton"),
+  saveAndApplyScheduleButton: document.querySelector("#saveAndApplyScheduleButton"),
+  reloadConfigButton: document.querySelector("#reloadConfigButton"),
+  configMessage: document.querySelector("#configMessage"),
+  configSqlStatus: document.querySelector("#configSqlStatus"),
+  configProtectedPath: document.querySelector("#configProtectedPath"),
+  configRuntimePath: document.querySelector("#configRuntimePath")
 };
 
 bindEvents();
@@ -121,10 +162,35 @@ function bindEvents() {
 
   elements.quickFilterTab.addEventListener("click", () => activateTab(TAB_IDS.quickFilter));
   elements.mappingSettingsTab.addEventListener("click", () => activateTab(TAB_IDS.mappingSettings));
-  elements.quickMappingSelect.addEventListener("change", applySelectedMappingToQuickFilter);
-  elements.openFilteredPageButton.addEventListener("click", openFilteredReviewPage);
-  elements.clearFilterButton.addEventListener("click", clearPreFilter);
+  elements.projectOptionFilterButton.addEventListener("click", () => toggleOptionFilterMenu("project"));
+  elements.processOptionFilterButton.addEventListener("click", () => toggleOptionFilterMenu("process"));
+  elements.projectOptionFilterSearch.addEventListener("input", renderOptionFilterControls);
+  elements.processOptionFilterSearch.addEventListener("input", renderOptionFilterControls);
+  elements.selectAllProjectOptionsButton.addEventListener("click", () => setAllOptionDraftKeys("project", true));
+  elements.clearProjectOptionsButton.addEventListener("click", () => setAllOptionDraftKeys("project", false));
+  elements.selectAllProcessOptionsButton.addEventListener("click", () => setAllOptionDraftKeys("process", true));
+  elements.clearProcessOptionsButton.addEventListener("click", () => setAllOptionDraftKeys("process", false));
+  elements.saveOptionFiltersButton.addEventListener("click", () => saveOptionFilters());
+  elements.resetOptionFiltersButton.addEventListener("click", resetOptionFilters);
+  document.addEventListener("click", closeOptionFilterMenusOnOutsideClick);
   elements.saveMappingButton.addEventListener("click", saveMappingPreset);
+  elements.openConfigModalButton.addEventListener("click", openConfigModal);
+  elements.closeConfigModalButton.addEventListener("click", closeConfigModal);
+  elements.cancelConfigButton.addEventListener("click", closeConfigModal);
+  elements.configModal.addEventListener("click", event => {
+    if (event.target === elements.configModal) {
+      closeConfigModal();
+    }
+  });
+  window.addEventListener("keydown", event => {
+    if (event.key === "Escape" && !elements.configModal.hidden) {
+      closeConfigModal();
+    }
+  });
+  elements.saveConfigButton.addEventListener("click", saveConfig);
+  elements.applyScheduleButton.addEventListener("click", applyScheduledTask);
+  elements.saveAndApplyScheduleButton.addEventListener("click", applyScheduledTask);
+  elements.reloadConfigButton.addEventListener("click", loadConfig);
 
   [
     elements.commitStatusFilter,
@@ -137,12 +203,14 @@ function bindEvents() {
 }
 
 async function init() {
+  state.optionFilterDraft = cloneOptionFilters(state.optionFilters);
   await loadOptions();
   hydrateFilterControls();
   hydrateManualReportForm();
   renderMappingPresetControls();
   await refreshCandidates();
   await loadScanStatus();
+  await loadConfig();
   renderApp();
 }
 
@@ -171,7 +239,7 @@ async function scanNow() {
   elements.statusText.textContent = "正在掃描 Git commits...";
   try {
     const result = await fetchJson("/api/scan", { method: "POST" });
-    elements.statusText.textContent = `掃描完成：新增 ${result.added} 筆，既有 ${result.existing} 筆。`;
+    elements.statusText.textContent = `掃描完成：新增 ${result.added} 筆，既有 ${result.existing} 筆`;
     state.scanStatus = result.scanStatus;
     renderScanStatus();
     await refreshCandidates();
@@ -193,12 +261,17 @@ function renderApp() {
   }
 
   if (state.currentPage === PAGE_IDS.filters) {
-    elements.statusText.textContent = `目前 ${state.mappingPresets.length} 組預設對應。`;
+    elements.statusText.textContent = `目前 ${state.mappingPresets.length} 組預設對應`;
+    renderOptionFilterControls();
     renderMappingPresetControls();
   }
 
   if (state.currentPage === PAGE_IDS.commits) {
     renderCommitListPage();
+  }
+
+  if (state.currentPage === PAGE_IDS.config) {
+    renderConfigPage();
   }
 }
 
@@ -235,16 +308,13 @@ function setCurrentPage(pageId, replace = false) {
 
 function renderReviewPage() {
   elements.candidateList.replaceChildren();
-  const candidates = applyPreFilter(state.candidates.filter(candidate => normalizeStatus(candidate.status) === "Pending"));
-  const filterText = hasActiveFilter() ? `，篩選後 ${candidates.length} 筆` : "";
-  elements.statusText.textContent = `目前 ${candidates.length} 筆待確認${filterText}。`;
+  const candidates = state.candidates.filter(candidate => normalizeStatus(candidate.status) === "Pending");
+  elements.statusText.textContent = `目前 ${candidates.length} 筆待確認`;
 
   if (candidates.length === 0) {
     const empty = document.createElement("div");
     empty.className = "empty";
-    empty.textContent = hasActiveFilter()
-      ? "目前沒有符合 PROJECT_CODE / PROCESS_TYPE 的待確認 commit。"
-      : "目前沒有待確認 commit。";
+    empty.textContent = "目前沒有待確認 commit";
     elements.candidateList.append(empty);
     return;
   }
@@ -266,9 +336,14 @@ function activateReportTab(tabId) {
 }
 
 function hydrateManualReportForm() {
-  fillSelect(elements.manualProjectSelect, state.projects, "");
-  fillSelect(elements.manualProcessSelect, state.processTypes, "");
-  elements.manualWorkDate.value = formatDateInput(new Date());
+  const selectedProject = elements.manualProjectSelect.value;
+  const selectedProcess = elements.manualProcessSelect.value;
+  fillSelect(elements.manualProjectSelect, getProjectEntryOptions(selectedProject), selectedProject);
+  fillSelect(elements.manualProcessSelect, getProcessEntryOptions(selectedProcess), selectedProcess);
+
+  if (!elements.manualWorkDate.value) {
+    elements.manualWorkDate.value = formatDateInput(new Date());
+  }
 }
 
 async function submitManualReport() {
@@ -286,7 +361,7 @@ async function submitManualReport() {
       })
     });
 
-    setMessage(elements.manualReportMessage, "已寫入手動日報。", "success");
+    setMessage(elements.manualReportMessage, "已寫入手動日報", "success");
     clearManualReportForm({ keepMessage: true });
     await refreshCandidates();
   } catch (error) {
@@ -329,8 +404,8 @@ function createCandidateCard(candidate) {
 
   const autoMappingPreset = findCandidateMappingPreset(candidate);
   const { projectCode, processType } = getEffectiveCandidateSelection(candidate, autoMappingPreset);
-  fillSelect(projectSelect, state.projects, projectCode);
-  fillSelect(processSelect, state.processTypes, processType);
+  fillSelect(projectSelect, getProjectEntryOptions(projectCode), projectCode);
+  fillSelect(processSelect, getProcessEntryOptions(processType), processType);
   renderAutoMappingNote(autoMappingNote, candidate, autoMappingPreset);
   summary.value = candidate.summary ?? "";
 
@@ -351,7 +426,7 @@ function createCandidateCard(candidate) {
           summary: summary.value
         })
       });
-      setMessage(message, "已寫入。", "success");
+      setMessage(message, "已寫入", "success");
       await refreshCandidates();
     } catch (error) {
       setMessage(message, `寫入失敗：${error.message}`, "error");
@@ -364,11 +439,13 @@ function createCandidateCard(candidate) {
       const updated = await fetchJson(`/api/candidates/${candidate.id}/regenerate`, { method: "POST" });
       const updatedAutoMappingPreset = findCandidateMappingPreset(updated);
       const updatedSelection = getEffectiveCandidateSelection(updated, updatedAutoMappingPreset);
+      fillSelect(projectSelect, getProjectEntryOptions(updatedSelection.projectCode), updatedSelection.projectCode);
+      fillSelect(processSelect, getProcessEntryOptions(updatedSelection.processType), updatedSelection.processType);
       projectSelect.value = updatedSelection.projectCode;
       processSelect.value = updatedSelection.processType;
       summary.value = updated.summary;
       renderAutoMappingNote(autoMappingNote, updated, updatedAutoMappingPreset);
-      setMessage(message, "已重新產生。", "success");
+      setMessage(message, "已重新產生", "success");
     } catch (error) {
       setMessage(message, `重新產生失敗：${error.message}`, "error");
     }
@@ -383,7 +460,7 @@ function createCandidateCard(candidate) {
         body: JSON.stringify({ summary: summary.value })
       });
       summary.value = translated.summary;
-      setMessage(message, "已翻譯成繁體中文。", "success");
+      setMessage(message, "已翻譯成繁體中文", "success");
     } catch (error) {
       setMessage(message, `翻譯失敗：${error.message}`, "error");
     }
@@ -406,14 +483,14 @@ function renderCommitListPage() {
   elements.commitTableBody.replaceChildren();
   fillCommitProjectFilter();
   const commits = getFilteredCommits();
-  elements.statusText.textContent = `Commit 清單 ${commits.length} 筆。`;
+  elements.statusText.textContent = `Commit 清單 ${commits.length} 筆`;
 
   if (commits.length === 0) {
     const row = document.createElement("tr");
     const cell = document.createElement("td");
     cell.colSpan = 6;
     cell.className = "empty-cell";
-    cell.textContent = "目前沒有符合條件的 commit。";
+    cell.textContent = "目前沒有符合條件的 commit";
     row.append(cell);
     elements.commitTableBody.append(row);
     renderCommitDetail(null);
@@ -538,6 +615,126 @@ function fillCommitProjectFilter() {
   state.commitFilters.projectCode = elements.commitProjectFilter.value;
 }
 
+async function loadConfig() {
+  try {
+    state.config = await fetchJson("/api/config");
+    hydrateConfigForm();
+    renderConfigPage();
+  } catch (error) {
+    setMessage(elements.configMessage, `設定載入失敗：${error.message}`, "error");
+  }
+}
+
+function hydrateConfigForm() {
+  if (!state.config) {
+    return;
+  }
+
+  elements.configRepoRootInput.value = state.config.repoRoot || "";
+  elements.configGitAuthorNameInput.value = state.config.gitAuthorName || "";
+  elements.configGitAuthorEmailInput.value = state.config.gitAuthorEmail || "";
+  elements.configScanLookbackDaysInput.value = state.config.scanLookbackDays ?? 0;
+  elements.configScheduleMinutesInput.value = state.config.scheduleMinutes ?? 5;
+  elements.configPrincipalUserInput.value = state.config.principalUser || "";
+  elements.configAuditUserInput.value = state.config.auditUser || "";
+}
+
+function renderConfigPage() {
+  if (!state.config) {
+    elements.statusText.textContent = "設定載入中";
+    elements.configSqlStatus.textContent = "載入中";
+    return;
+  }
+
+  elements.statusText.textContent = `目前掃描 ${state.config.repoRoot}，每 ${state.config.scheduleMinutes} 分鐘排程`;
+  elements.configSummaryRepoRoot.textContent = state.config.repoRoot || "-";
+  elements.configSummaryAuthor.textContent = `${state.config.gitAuthorName || "-"} / ${state.config.gitAuthorEmail || "未設定 Email"}`;
+  elements.configSummarySchedule.textContent = `每 ${state.config.scheduleMinutes} 分鐘`;
+  elements.configSummaryLookback.textContent = `${state.config.scanLookbackDays} 天`;
+  elements.configSummaryUsers.textContent = `${state.config.principalUser || "-"} / ${state.config.auditUser || "-"}`;
+  elements.configSqlStatus.textContent = state.config.sqlConnectionConfigured ? "已設定" : "未設定";
+  elements.configSqlStatus.classList.toggle("is-ok", Boolean(state.config.sqlConnectionConfigured));
+  elements.configSqlStatus.classList.toggle("is-warning", !state.config.sqlConnectionConfigured);
+  elements.configProtectedPath.textContent = state.config.protectedConnectionStringPath || "-";
+  elements.configRuntimePath.textContent = state.config.runtimeConfigPath || "-";
+}
+
+function openConfigModal() {
+  hydrateConfigForm();
+  setMessage(elements.configMessage, "", "");
+  elements.configModal.hidden = false;
+  elements.configModal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+  elements.configRepoRootInput.focus();
+}
+
+function closeConfigModal() {
+  elements.configModal.hidden = true;
+  elements.configModal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+}
+
+async function saveConfig() {
+  setMessage(elements.configMessage, "保存設定中...", "");
+  elements.saveConfigButton.disabled = true;
+  try {
+    state.config = await fetchJson("/api/config", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(readConfigForm())
+    });
+    hydrateConfigForm();
+    renderConfigPage();
+    setMessage(elements.configMessage, "設定已保存，下一次掃描會套用", "success");
+    closeConfigModal();
+  } catch (error) {
+    setMessage(elements.configMessage, `保存失敗：${error.message}`, "error");
+  } finally {
+    elements.saveConfigButton.disabled = false;
+  }
+}
+
+async function applyScheduledTask() {
+  setMessage(elements.configMessage, "保存設定並套用排程中...", "");
+  elements.applyScheduleButton.disabled = true;
+  elements.saveAndApplyScheduleButton.disabled = true;
+  try {
+    state.config = await fetchJson("/api/config", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(readConfigForm())
+    });
+    hydrateConfigForm();
+    renderConfigPage();
+
+    const scheduleMinutes = state.config.scheduleMinutes;
+    const result = await fetchJson("/api/config/scheduled-task", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scheduleMinutes })
+    });
+    setMessage(elements.configMessage, result.message || `排程已改為每 ${result.scheduleMinutes} 分鐘掃描`, "success");
+    closeConfigModal();
+  } catch (error) {
+    setMessage(elements.configMessage, `套用排程失敗：${error.message}`, "error");
+  } finally {
+    elements.applyScheduleButton.disabled = false;
+    elements.saveAndApplyScheduleButton.disabled = false;
+  }
+}
+
+function readConfigForm() {
+  return {
+    repoRoot: elements.configRepoRootInput.value.trim(),
+    gitAuthorName: elements.configGitAuthorNameInput.value.trim(),
+    gitAuthorEmail: elements.configGitAuthorEmailInput.value.trim(),
+    scanLookbackDays: Number.parseInt(elements.configScanLookbackDaysInput.value, 10) || 0,
+    scheduleMinutes: Number.parseInt(elements.configScheduleMinutesInput.value, 10) || 0,
+    principalUser: elements.configPrincipalUserInput.value.trim(),
+    auditUser: elements.configAuditUserInput.value.trim()
+  };
+}
+
 async function loadScanStatus() {
   try {
     state.scanStatus = await fetchJson("/api/scan-status");
@@ -594,33 +791,25 @@ function updateDashboardMetrics() {
 }
 
 function hydrateFilterControls() {
-  fillSelect(elements.quickProjectSelect, state.projects, state.activeFilter.projectCode);
-  fillSelect(elements.quickProcessSelect, state.processTypes, state.activeFilter.processType);
-  fillSelect(elements.mappingProjectSelect, state.projects, "");
-  fillSelect(elements.mappingProcessSelect, state.processTypes, "");
+  const selectedProject = elements.mappingProjectSelect.value;
+  const selectedProcess = elements.mappingProcessSelect.value;
+  renderOptionFilterControls();
+  fillSelect(elements.mappingProjectSelect, getProjectEntryOptions(selectedProject), selectedProject);
+  fillSelect(elements.mappingProcessSelect, getProcessEntryOptions(selectedProcess), selectedProcess);
   fillSelect(elements.commitProjectFilter, [], "", "全部專案");
 }
 
 function renderMappingPresetControls() {
-  renderQuickMappingSelect();
+  hydrateMappingSelects();
   renderMappingTable();
   updateDashboardMetrics();
 }
 
-function renderQuickMappingSelect() {
-  elements.quickMappingSelect.replaceChildren();
-
-  const placeholder = document.createElement("option");
-  placeholder.value = "";
-  placeholder.textContent = "請選擇對應名稱";
-  elements.quickMappingSelect.append(placeholder);
-
-  for (const preset of state.mappingPresets) {
-    const option = document.createElement("option");
-    option.value = preset.id;
-    option.textContent = preset.name;
-    elements.quickMappingSelect.append(option);
-  }
+function hydrateMappingSelects() {
+  const selectedProject = elements.mappingProjectSelect.value;
+  const selectedProcess = elements.mappingProcessSelect.value;
+  fillSelect(elements.mappingProjectSelect, getProjectEntryOptions(selectedProject), selectedProject);
+  fillSelect(elements.mappingProcessSelect, getProcessEntryOptions(selectedProcess), selectedProcess);
 }
 
 function renderMappingTable() {
@@ -631,7 +820,7 @@ function renderMappingTable() {
     const cell = document.createElement("td");
     cell.colSpan = 4;
     cell.className = "empty-cell";
-    cell.textContent = "尚未建立預設對應。";
+    cell.textContent = "尚未建立預設對應";
     row.append(cell);
     elements.mappingTableBody.append(row);
     return;
@@ -660,18 +849,11 @@ function actionCell(preset) {
   const apply = document.createElement("button");
   apply.type = "button";
   apply.className = "micro";
-  apply.textContent = "套用";
+  apply.textContent = "加入常用";
   apply.addEventListener("click", () => {
-    elements.quickProjectSelect.value = preset.projectKey;
-    elements.quickProcessSelect.value = preset.processKey;
+    addOptionFilterKeys(preset.projectKey, preset.processKey);
     activateTab(TAB_IDS.quickFilter);
   });
-
-  const open = document.createElement("button");
-  open.type = "button";
-  open.className = "micro";
-  open.textContent = "套用到日報";
-  open.addEventListener("click", () => navigateWithFilter(preset.projectKey, preset.processKey, PAGE_IDS.review));
 
   const remove = document.createElement("button");
   remove.type = "button";
@@ -686,7 +868,7 @@ function actionCell(preset) {
   });
 
   cell.className = "table-actions";
-  cell.append(apply, open, remove);
+  cell.append(apply, remove);
   return cell;
 }
 
@@ -700,29 +882,207 @@ function activateTab(tabId) {
   elements.mappingSettingsPanel.classList.toggle("is-active", !isQuick);
 }
 
-function applySelectedMappingToQuickFilter() {
-  const preset = state.mappingPresets.find(item => item.id === elements.quickMappingSelect.value);
-  if (!preset) {
+function renderOptionFilterControls() {
+  if (!state.optionFilterDraft) {
+    state.optionFilterDraft = cloneOptionFilters(state.optionFilters);
+  }
+
+  renderCheckboxOptionList("project");
+  renderCheckboxOptionList("process");
+  updateOptionFilterSummary();
+}
+
+function renderCheckboxOptionList(kind) {
+  const config = optionFilterConfig(kind);
+  const selectedKeys = new Set(state.optionFilterDraft[config.stateKey]);
+  const keyword = config.search.value.trim().toLowerCase();
+  const options = keyword
+    ? config.options.filter(option => optionMatchesKeyword(option, keyword))
+    : config.options;
+
+  config.list.replaceChildren();
+
+  if (options.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "checkbox-option-empty";
+    empty.textContent = "沒有符合的選項";
+    config.list.append(empty);
     return;
   }
 
-  elements.quickProjectSelect.value = preset.projectKey;
-  elements.quickProcessSelect.value = preset.processKey;
+  for (const option of options) {
+    const key = getOptionKey(option);
+    const text = getOptionDisplay(option);
+    const item = document.createElement("label");
+    item.className = "checkbox-option";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = key;
+    checkbox.checked = selectedKeys.has(key);
+    checkbox.addEventListener("change", () => {
+      updateOptionFilterDraft(kind, key, checkbox.checked);
+    });
+
+    const label = document.createElement("span");
+    label.textContent = `${text} (${key})`;
+
+    item.append(checkbox, label);
+    config.list.append(item);
+  }
 }
 
-function openFilteredReviewPage() {
-  navigateWithFilter(elements.quickProjectSelect.value, elements.quickProcessSelect.value, PAGE_IDS.review);
+function toggleOptionFilterMenu(kind) {
+  const config = optionFilterConfig(kind);
+  const willOpen = config.menu.hidden;
+
+  closeOptionFilterMenus();
+
+  if (willOpen) {
+    config.menu.hidden = false;
+    config.button.setAttribute("aria-expanded", "true");
+    config.search.focus();
+  }
 }
 
-function clearPreFilter() {
-  state.activeFilter = { projectCode: "", processType: "" };
-  elements.quickProjectSelect.value = "";
-  elements.quickProcessSelect.value = "";
-  const url = new URL(window.location.href);
-  url.searchParams.delete(QUERY_PARAM_NAMES.projectCode);
-  url.searchParams.delete(QUERY_PARAM_NAMES.processType);
-  window.history.pushState({}, "", url);
-  renderApp();
+function closeOptionFilterMenusOnOutsideClick(event) {
+  if (event.target.closest(".checkbox-dropdown")) {
+    return;
+  }
+
+  closeOptionFilterMenus();
+}
+
+function closeOptionFilterMenus() {
+  for (const kind of ["project", "process"]) {
+    const config = optionFilterConfig(kind);
+    config.menu.hidden = true;
+    config.button.setAttribute("aria-expanded", "false");
+  }
+}
+
+function updateOptionFilterDraft(kind, key, checked) {
+  const config = optionFilterConfig(kind);
+  const keys = new Set(state.optionFilterDraft[config.stateKey]);
+
+  if (checked) {
+    keys.add(key);
+  } else {
+    keys.delete(key);
+  }
+
+  state.optionFilterDraft[config.stateKey] = [...keys];
+  updateOptionFilterSummary();
+}
+
+function setAllOptionDraftKeys(kind, shouldSelect) {
+  const config = optionFilterConfig(kind);
+  state.optionFilterDraft[config.stateKey] = shouldSelect
+    ? config.options.map(getOptionKey).filter(Boolean)
+    : [];
+  renderOptionFilterControls();
+}
+
+function addOptionFilterKeys(projectKey, processKey) {
+  state.optionFilterDraft = cloneOptionFilters(state.optionFilters);
+
+  if (projectKey) {
+    state.optionFilterDraft.projectCodes = [...new Set([...state.optionFilterDraft.projectCodes, projectKey])];
+  }
+
+  if (processKey) {
+    state.optionFilterDraft.processTypes = [...new Set([...state.optionFilterDraft.processTypes, processKey])];
+  }
+
+  saveOptionFilters("已加入常用選項");
+}
+
+function saveOptionFilters(message = "已保存常用選項") {
+  state.optionFilters = normalizeOptionFilters(state.optionFilterDraft);
+  state.optionFilterDraft = cloneOptionFilters(state.optionFilters);
+  persistOptionFilters();
+  closeOptionFilterMenus();
+  renderOptionFilterControls();
+  refreshEntryOptionControls();
+  elements.statusText.textContent = message;
+}
+
+function resetOptionFilters() {
+  state.optionFilterDraft = { projectCodes: [], processTypes: [] };
+  saveOptionFilters("已恢復顯示全部選項");
+}
+
+function refreshEntryOptionControls() {
+  hydrateManualReportForm();
+  hydrateMappingSelects();
+  renderReviewPage();
+  renderCommitListPage();
+  renderActiveFilterBadge();
+}
+
+function updateOptionFilterSummary() {
+  const projectCount = state.optionFilterDraft.projectCodes.length;
+  const processCount = state.optionFilterDraft.processTypes.length;
+
+  elements.projectOptionFilterText.textContent = projectCount > 0
+    ? `已選 ${projectCount} 個專案`
+    : "全部專案";
+  elements.processOptionFilterText.textContent = processCount > 0
+    ? `已選 ${processCount} 個流程`
+    : "全部流程";
+
+  elements.optionFilterSummary.textContent = projectCount === 0 && processCount === 0
+    ? "顯示全部選項"
+    : `PROJECT_CODE ${projectCount || "全部"} / PROCESS_TYPE ${processCount || "全部"}`;
+}
+
+function optionFilterConfig(kind) {
+  if (kind === "project") {
+    return {
+      stateKey: "projectCodes",
+      options: state.projects,
+      button: elements.projectOptionFilterButton,
+      text: elements.projectOptionFilterText,
+      menu: elements.projectOptionFilterMenu,
+      search: elements.projectOptionFilterSearch,
+      list: elements.projectOptionFilterList
+    };
+  }
+
+  return {
+    stateKey: "processTypes",
+    options: state.processTypes,
+    button: elements.processOptionFilterButton,
+    text: elements.processOptionFilterText,
+    menu: elements.processOptionFilterMenu,
+    search: elements.processOptionFilterSearch,
+    list: elements.processOptionFilterList
+  };
+}
+
+function optionMatchesKeyword(option, keyword) {
+  return `${getOptionKey(option)} ${getOptionDisplay(option)}`.toLowerCase().includes(keyword);
+}
+
+function getProjectEntryOptions(selectedValue = "") {
+  return getFilteredEntryOptions(state.projects, state.optionFilters.projectCodes, selectedValue);
+}
+
+function getProcessEntryOptions(selectedValue = "") {
+  return getFilteredEntryOptions(state.processTypes, state.optionFilters.processTypes, selectedValue);
+}
+
+function getFilteredEntryOptions(options, allowedKeys, selectedValue) {
+  const visible = allowedKeys.length > 0
+    ? options.filter(option => allowedKeys.includes(getOptionKey(option)))
+    : [...options];
+
+  if (selectedValue && !visible.some(option => getOptionKey(option) === selectedValue)) {
+    const selectedOption = options.find(option => getOptionKey(option) === selectedValue);
+    visible.push(selectedOption ?? { key: selectedValue, value: selectedValue });
+  }
+
+  return visible;
 }
 
 function navigateWithFilter(projectCode, processType, pageId) {
@@ -751,7 +1111,7 @@ function saveMappingPreset() {
   const process = selectedOption(elements.mappingProcessSelect);
 
   if (!name || !project || !process) {
-    elements.statusText.textContent = "請輸入專案名稱，並選擇 PROJECT_CODE 與 PROCESS_TYPE。";
+    elements.statusText.textContent = "請輸入專案名稱，並選擇 PROJECT_CODE 與 PROCESS_TYPE";
     return;
   }
 
@@ -790,20 +1150,17 @@ function applyPreFilter(candidates) {
 }
 
 function renderActiveFilterBadge() {
-  if (!hasActiveFilter()) {
-    elements.activeFilterBadge.textContent = "未套用預先篩選";
+  const projectCount = state.optionFilters.projectCodes.length;
+  const processCount = state.optionFilters.processTypes.length;
+
+  if (projectCount === 0 && processCount === 0) {
+    elements.activeFilterBadge.textContent = "常用下拉：顯示全部";
     elements.activeFilterBadge.classList.remove("is-active");
     return;
   }
 
-  const projectText = getOptionText(state.projects, state.activeFilter.projectCode);
-  const processText = getOptionText(state.processTypes, state.activeFilter.processType);
-  elements.activeFilterBadge.textContent = `已篩選：${projectText || "全部專案"} / ${processText || "全部流程"}`;
+  elements.activeFilterBadge.textContent = `常用下拉：PROJECT_CODE ${projectCount || "全部"} / PROCESS_TYPE ${processCount || "全部"}`;
   elements.activeFilterBadge.classList.add("is-active");
-}
-
-function hasActiveFilter() {
-  return Boolean(state.activeFilter.projectCode || state.activeFilter.processType);
 }
 
 function readFilterFromUrl() {
@@ -829,8 +1186,8 @@ function fillSelect(select, options, selectedValue, placeholderText = "請選擇
 
   for (const option of options) {
     const node = document.createElement("option");
-    node.value = option.key || option.code;
-    node.textContent = option.value || option.name || option.display;
+    node.value = getOptionKey(option);
+    node.textContent = getOptionDisplay(option);
     select.append(node);
   }
 
@@ -920,8 +1277,16 @@ function getOptionText(options, key) {
     return "";
   }
 
-  const option = options.find(item => (item.key || item.code) === key);
-  return option?.value || option?.name || option?.display || key;
+  const option = options.find(item => getOptionKey(item) === key);
+  return option ? getOptionDisplay(option) : key;
+}
+
+function getOptionKey(option) {
+  return option?.key || option?.code || "";
+}
+
+function getOptionDisplay(option) {
+  return option?.value || option?.name || option?.display || getOptionKey(option);
 }
 
 function formatDateInput(date) {
@@ -960,6 +1325,41 @@ function loadMappingPresets() {
 
 function persistMappingPresets() {
   localStorage.setItem(STORAGE_KEYS.mappingPresets, JSON.stringify(state.mappingPresets));
+}
+
+function loadOptionFilters() {
+  try {
+    return normalizeOptionFilters(JSON.parse(localStorage.getItem(STORAGE_KEYS.optionFilters) || "{}"));
+  } catch {
+    return { projectCodes: [], processTypes: [] };
+  }
+}
+
+function persistOptionFilters() {
+  localStorage.setItem(STORAGE_KEYS.optionFilters, JSON.stringify(state.optionFilters));
+}
+
+function normalizeOptionFilters(value) {
+  return {
+    projectCodes: normalizeStringArray(value?.projectCodes),
+    processTypes: normalizeStringArray(value?.processTypes)
+  };
+}
+
+function cloneOptionFilters(value) {
+  const normalized = normalizeOptionFilters(value);
+  return {
+    projectCodes: [...normalized.projectCodes],
+    processTypes: [...normalized.processTypes]
+  };
+}
+
+function normalizeStringArray(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return [...new Set(value.map(item => String(item ?? "").trim()).filter(Boolean))];
 }
 
 function statusLabel(status) {

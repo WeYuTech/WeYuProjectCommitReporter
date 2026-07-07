@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Git Commit 日報</title>
+  <title>工作項目救星</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
     <aside class="sidebar" aria-label="主選單">
       <div class="sidebar-brand">
         <span class="brand-glyph"></span>
-        <strong>CommitOps</strong>
+        <strong>工作項目救星</strong>
       </div>
 
       <nav class="side-nav">
@@ -27,6 +27,10 @@
         <button class="nav-item" type="button" data-page="commits">
           <span class="nav-icon">03</span>
           <span>Commit 清單</span>
+        </button>
+        <button class="nav-item" type="button" data-page="config">
+          <span class="nav-icon">04</span>
+          <span>設定</span>
         </button>
 
         <span class="nav-label support-label">系統</span>
@@ -61,6 +65,7 @@
           <button class="nav-item is-active" type="button" data-page="review">日報確認</button>
           <button class="nav-item" type="button" data-page="filters">篩選工作台</button>
           <button class="nav-item" type="button" data-page="commits">Commit 清單</button>
+          <button class="nav-item" type="button" data-page="config">設定</button>
         </nav>
       </header>
 
@@ -69,10 +74,10 @@
           <section class="page-title" aria-label="頁面標題">
             <div>
               <span class="eyebrow">Report Review</span>
-              <h1>日報確認</h1>
-              <p>集中處理需要人工確認的 commit，確認後才會寫入專案管理。</p>
+              <h1>Review Commit</h1>
+              <p>集中處理需要人工確認的 commit，確認後才會寫入專案管理</p>
             </div>
-            <div id="activeFilterBadge" class="active-filter-badge">未套用預先篩選</div>
+            <div id="activeFilterBadge" class="active-filter-badge">常用下拉：顯示全部</div>
           </section>
 
           <section class="metric-grid" aria-label="目前統計">
@@ -114,7 +119,7 @@
                   <div class="section-head">
                     <div>
                       <h2>待確認 Commit</h2>
-                      <p>這裡只顯示需要寫入或略過的項目。</p>
+                      <p>這裡只顯示需要寫入或略過的項目</p>
                     </div>
                   </div>
                   <section id="candidateList" class="candidate-list" aria-live="polite"></section>
@@ -151,7 +156,7 @@
                 <div class="section-head">
                   <div>
                     <h2>手動輸入日報</h2>
-                    <p>不需要 Git commit 時，直接填寫工作日期、PROJECT_CODE、PROCESS_TYPE 與 SUMMARY 後寫入。</p>
+                    <p>不需要 Git commit 時，直接填寫工作日期、PROJECT_CODE、PROCESS_TYPE 與 SUMMARY 後寫入</p>
                   </div>
                 </div>
 
@@ -190,7 +195,7 @@
             <div>
               <span class="eyebrow">Filter Workbench</span>
               <h1>篩選工作台</h1>
-              <p>只管理快速篩選條件與 repo 對應規則，不顯示 commit 處理流程。</p>
+              <p>只管理快速篩選條件與 repo 對應規則，不顯示 commit 處理流程</p>
             </div>
           </section>
 
@@ -198,32 +203,72 @@
             <div class="workbench-head">
               <div>
                 <h2>篩選條件與預設對應</h2>
-                <p>建立常用 repo 名稱對應，讓日報確認自動帶入 PROJECT_CODE 與 PROCESS_TYPE。</p>
+                <p>建立常用 repo 名稱對應，讓日報確認自動帶入 PROJECT_CODE 與 PROCESS_TYPE</p>
               </div>
             </div>
 
             <div class="tabbar" role="tablist" aria-label="篩選功能">
-              <button id="quickFilterTab" class="tab-button is-active" type="button" role="tab" aria-selected="true" aria-controls="quickFilterPanel">快速篩選入口</button>
+              <button id="quickFilterTab" class="tab-button is-active" type="button" role="tab" aria-selected="true" aria-controls="quickFilterPanel">常用下拉設定</button>
               <button id="mappingSettingsTab" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="mappingSettingsPanel">預設對應設定</button>
             </div>
 
             <div id="quickFilterPanel" class="tab-panel is-active" role="tabpanel" aria-labelledby="quickFilterTab">
-              <div class="panel-grid">
-                <label>
-                  <span>已儲存對應名稱</span>
-                  <select id="quickMappingSelect"></select>
-                </label>
-                <label>
-                  <span>PROJECT_CODE</span>
-                  <select id="quickProjectSelect"></select>
-                </label>
-                <label>
-                  <span>PROCESS_TYPE</span>
-                  <select id="quickProcessSelect"></select>
-                </label>
-                <div class="panel-actions">
-                  <button id="openFilteredPageButton" class="primary" type="button">套用到日報確認</button>
-                  <button id="clearFilterButton" class="secondary" type="button">清除篩選</button>
+              <div class="option-filter-panel">
+                <div class="option-filter-intro">
+                  <div>
+                    <h3>限制日報欄位可選項目</h3>
+                    <p>勾選常用的 PROJECT_CODE 與 PROCESS_TYPE，日報確認、手KEY日報與預設對應設定只會顯示這些選項</p>
+                  </div>
+                  <span id="optionFilterSummary" class="option-filter-summary">顯示全部選項</span>
+                </div>
+
+                <div class="option-filter-grid">
+                  <section class="option-filter-card">
+                    <div class="option-filter-card-head">
+                      <div>
+                        <strong>常用 PROJECT_CODE</strong>
+                        <small>沒有勾選時會顯示全部專案</small>
+                      </div>
+                      <button id="selectAllProjectOptionsButton" class="micro" type="button">全選</button>
+                    </div>
+                    <div class="checkbox-dropdown">
+                      <button id="projectOptionFilterButton" class="checkbox-dropdown-button" type="button" aria-expanded="false" aria-controls="projectOptionFilterMenu">
+                        <span id="projectOptionFilterText">全部專案</span>
+                        <span class="dropdown-caret">⌄</span>
+                      </button>
+                      <div id="projectOptionFilterMenu" class="checkbox-dropdown-menu" hidden>
+                        <input id="projectOptionFilterSearch" class="checkbox-dropdown-search" type="search" placeholder="搜尋專案名稱或代碼">
+                        <div id="projectOptionFilterList" class="checkbox-option-list"></div>
+                      </div>
+                    </div>
+                    <button id="clearProjectOptionsButton" class="micro" type="button">清除 PROJECT_CODE</button>
+                  </section>
+
+                  <section class="option-filter-card">
+                    <div class="option-filter-card-head">
+                      <div>
+                        <strong>常用 PROCESS_TYPE</strong>
+                        <small>沒有勾選時會顯示全部流程</small>
+                      </div>
+                      <button id="selectAllProcessOptionsButton" class="micro" type="button">全選</button>
+                    </div>
+                    <div class="checkbox-dropdown">
+                      <button id="processOptionFilterButton" class="checkbox-dropdown-button" type="button" aria-expanded="false" aria-controls="processOptionFilterMenu">
+                        <span id="processOptionFilterText">全部流程</span>
+                        <span class="dropdown-caret">⌄</span>
+                      </button>
+                      <div id="processOptionFilterMenu" class="checkbox-dropdown-menu" hidden>
+                        <input id="processOptionFilterSearch" class="checkbox-dropdown-search" type="search" placeholder="搜尋流程名稱或代碼">
+                        <div id="processOptionFilterList" class="checkbox-option-list"></div>
+                      </div>
+                    </div>
+                    <button id="clearProcessOptionsButton" class="micro" type="button">清除 PROCESS_TYPE</button>
+                  </section>
+                </div>
+
+                <div class="panel-actions option-filter-actions">
+                  <button id="saveOptionFiltersButton" class="primary" type="button">保存常用選項</button>
+                  <button id="resetOptionFiltersButton" class="secondary" type="button">顯示全部</button>
                 </div>
               </div>
             </div>
@@ -268,7 +313,7 @@
             <div>
               <span class="eyebrow">Commit List</span>
               <h1>Commit 清單</h1>
-              <p>檢視所有掃描到的 commit，可篩選與查看詳情，但不處理日報確認流程。</p>
+              <p>檢視所有掃描到的 commit，可篩選與查看詳情，但不處理日報確認流程</p>
             </div>
           </section>
 
@@ -347,6 +392,165 @@
               </div>
             </aside>
           </section>
+        </section>
+
+        <section id="configPage" class="app-page" data-page="config">
+          <section class="page-title" aria-label="設定頁標題">
+            <div>
+              <span class="eyebrow">Config</span>
+              <h1>系統設定</h1>
+              <p>管理本機掃描、排程與資料庫連線狀態，設定會保存到本機 runtime config，不會寫入 SQL 密碼</p>
+            </div>
+          </section>
+
+          <section class="config-layout" aria-label="系統設定內容">
+            <section class="config-panel config-overview-panel">
+              <div class="config-edit-entry">
+                <button id="openConfigModalButton" class="primary" type="button">編輯設定</button>
+              </div>
+              <div class="section-head">
+                <div>
+                  <h2>設定總覽</h2>
+                  <p>這裡顯示目前生效的本機設定，要修改參數時，請使用「編輯設定」開啟設定視窗</p>
+                </div>
+              </div>
+
+              <div class="config-summary-grid">
+                <article class="config-summary-card config-summary-wide">
+                  <span>掃描根目錄</span>
+                  <strong id="configSummaryRepoRoot">-</strong>
+                  <small>系統會從這個資料夾往下尋找 Git repository</small>
+                </article>
+                <article class="config-summary-card">
+                  <span>Commit 作者</span>
+                  <strong id="configSummaryAuthor">-</strong>
+                  <small>只產生這位作者的 commit 候選日報</small>
+                </article>
+                <article class="config-summary-card">
+                  <span>掃描排程</span>
+                  <strong id="configSummarySchedule">-</strong>
+                  <small>排程只產生候選，不會自動寫入資料庫</small>
+                </article>
+                <article class="config-summary-card">
+                  <span>回溯天數</span>
+                  <strong id="configSummaryLookback">-</strong>
+                  <small>控制掃描起始日，避免漏抓或抓太多舊 commit</small>
+                </article>
+                <article class="config-summary-card">
+                  <span>寫入人員</span>
+                  <strong id="configSummaryUsers">-</strong>
+                  <small>寫入日報時使用的負責人與審計使用者</small>
+                </article>
+              </div>
+
+              <div class="config-guidance" aria-label="設定說明">
+                <article>
+                  <strong>保存設定</strong>
+                  <p>只更新本機 runtime JSON，下一次手動掃描或排程掃描會套用新值</p>
+                </article>
+                <article>
+                  <strong>套用排程</strong>
+                  <p>重新註冊 Windows Task Scheduler 的掃描間隔，不會立即寫入任何日報</p>
+                </article>
+                <article>
+                  <strong>資料庫密碼</strong>
+                  <p>不在網頁輸入或保存，仍由 DPAPI protected file 管理</p>
+                </article>
+              </div>
+
+              <div class="config-actions">
+                <button id="applyScheduleButton" class="secondary" type="button">套用排程</button>
+                <button id="reloadConfigButton" class="secondary" type="button">重新載入</button>
+              </div>
+              <p id="configMessage" class="message"></p>
+            </section>
+
+            <aside class="config-side-panel" aria-label="設定狀態">
+              <div class="panel-block">
+                <span class="metric-label">資料庫狀態</span>
+                <strong id="configSqlStatus">載入中</strong>
+                <small id="configProtectedPath">-</small>
+              </div>
+              <div class="panel-block">
+                <span class="metric-label">Runtime Config</span>
+                <strong>本機 JSON</strong>
+                <small id="configRuntimePath">-</small>
+              </div>
+              <div class="panel-block">
+                <span class="metric-label">SQL 密碼</span>
+                <strong>不在網頁保存</strong>
+                <small>請使用 scripts\Set-ConnectionString.ps1 產生 DPAPI protected file</small>
+              </div>
+              <div class="panel-block config-command-block">
+                <span class="metric-label">設定指令範例</span>
+                <code id="configConnectionCommand">powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Set-ConnectionString.ps1 -ConnectionString "Data Source=YOUR_SQL_SERVER,1433;Initial Catalog=WeyutechV6;User ID=YOUR_USER;Password=YOUR_PASSWORD;TrustServerCertificate=True;Encrypt=False"</code>
+              </div>
+            </aside>
+          </section>
+
+          <div id="configModal" class="modal-backdrop" hidden aria-hidden="true">
+            <section class="config-modal" role="dialog" aria-modal="true" aria-labelledby="configModalTitle">
+              <header class="config-modal-head">
+                <div>
+                  <span class="eyebrow">Runtime Settings</span>
+                  <h2 id="configModalTitle">編輯系統設定</h2>
+                  <p>修改後會保存到本機 JSON，SQL 密碼不會在這裡保存</p>
+                </div>
+                <button id="closeConfigModalButton" class="icon-button" type="button" aria-label="關閉設定視窗">×</button>
+              </header>
+
+              <div class="config-modal-body">
+                <section class="config-modal-section">
+                  <h3>Git 掃描</h3>
+                  <label class="config-field config-field-wide">
+                    <span>RepoRoot</span>
+                    <input id="configRepoRootInput" type="text" autocomplete="off" placeholder="C:\Users\rdpuser\RiderProjects">
+                    <small>Git repository 的集中根目錄，掃描時會遞迴尋找底下含 `.git` 的專案</small>
+                  </label>
+                  <label class="config-field">
+                    <span>GitAuthorName</span>
+                    <input id="configGitAuthorNameInput" type="text" autocomplete="off" placeholder="Andy">
+                    <small>用來過濾 commit author name，避免同事的 commit 被列入你的日報</small>
+                  </label>
+                  <label class="config-field">
+                    <span>GitAuthorEmail</span>
+                    <input id="configGitAuthorEmailInput" type="email" autocomplete="off" placeholder="andy@example.com">
+                    <small>目前保留作為識別資訊與後續擴充，主要掃描過濾仍以 GitAuthorName 為準</small>
+                  </label>
+                  <label class="config-field">
+                    <span>ScanLookbackDays</span>
+                    <input id="configScanLookbackDaysInput" type="number" min="0" step="1">
+                    <small>0 代表只看今天 00:00 之後的 commit，大於 0 會往前回溯指定天數</small>
+                  </label>
+                </section>
+
+                <section class="config-modal-section">
+                  <h3>排程與寫入</h3>
+                  <label class="config-field">
+                    <span>ScheduleMinutes</span>
+                    <input id="configScheduleMinutesInput" type="number" min="1" step="1">
+                    <small>Windows Task Scheduler 的掃描間隔，修改後請按「保存並套用排程」</small>
+                  </label>
+                  <label class="config-field">
+                    <span>PrincipalUser</span>
+                    <input id="configPrincipalUserInput" type="text" autocomplete="off">
+                    <small>寫入 `BAS_PROJECT_MAINTAIN_DETAIL.PRINCIPAL_USER` 的值，預設是 Andy</small>
+                  </label>
+                  <label class="config-field">
+                    <span>AuditUser</span>
+                    <input id="configAuditUserInput" type="text" autocomplete="off">
+                    <small>寫入 `CREATE_USER` / `EDIT_USER` 的審計使用者，預設是 ADMINV2</small>
+                  </label>
+                </section>
+              </div>
+
+              <footer class="config-modal-actions">
+                <button id="cancelConfigButton" class="secondary" type="button">取消</button>
+                <button id="saveConfigButton" class="secondary" type="button">保存設定</button>
+                <button id="saveAndApplyScheduleButton" class="primary" type="button">保存並套用排程</button>
+              </footer>
+            </section>
+          </div>
         </section>
       </main>
     </div>
