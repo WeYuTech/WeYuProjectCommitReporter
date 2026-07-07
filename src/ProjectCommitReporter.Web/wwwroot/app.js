@@ -689,10 +689,13 @@ function commitStatusCell(commit) {
   const cell = document.createElement("td");
   const pill = document.createElement("span");
   const status = normalizeStatus(commit.status);
+  const label = statusLabel(status);
+  cell.className = "commit-status-cell";
   pill.className = "status-pill compact";
   pill.classList.toggle("approved", status === "Approved");
   pill.classList.toggle("skipped", status === "Skipped");
-  pill.textContent = statusLabel(status);
+  pill.textContent = label;
+  pill.title = label;
   cell.append(pill);
   return cell;
 }
