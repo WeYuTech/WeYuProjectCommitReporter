@@ -51,6 +51,11 @@ const state = {
 const elements = {
   navItems: [...document.querySelectorAll(".nav-item[data-page]")],
   pages: [...document.querySelectorAll(".app-page[data-page]")],
+  sidebarSqlStatus: document.querySelector("#sidebarSqlStatus"),
+  sidebarSqlDetail: document.querySelector("#sidebarSqlDetail"),
+  headerRepoRoot: document.querySelector("#headerRepoRoot"),
+  currentUserInitial: document.querySelector("#currentUserInitial"),
+  currentUserName: document.querySelector("#currentUserName"),
   statusText: document.querySelector("#statusText"),
   scanButton: document.querySelector("#scanButton"),
   template: document.querySelector("#candidateTemplate"),
@@ -138,7 +143,9 @@ const elements = {
   configMessage: document.querySelector("#configMessage"),
   configSqlStatus: document.querySelector("#configSqlStatus"),
   configProtectedPath: document.querySelector("#configProtectedPath"),
-  configRuntimePath: document.querySelector("#configRuntimePath")
+  configRuntimePath: document.querySelector("#configRuntimePath"),
+  principalUserDefaultText: document.querySelector("#principalUserDefaultText"),
+  auditUserDefaultText: document.querySelector("#auditUserDefaultText")
 };
 
 bindEvents();
@@ -619,8 +626,10 @@ async function loadConfig() {
   try {
     state.config = await fetchJson("/api/config");
     hydrateConfigForm();
+    renderShellConfig();
     renderConfigPage();
   } catch (error) {
+    renderShellConfig();
     setMessage(elements.configMessage, `設定載入失敗：${error.message}`, "error");
   }
 }
@@ -630,6 +639,7 @@ function hydrateConfigForm() {
     return;
   }
 
+  const defaults = state.config.defaults || {};
   elements.configRepoRootInput.value = state.config.repoRoot || "";
   elements.configGitAuthorNameInput.value = state.config.gitAuthorName || "";
   elements.configGitAuthorEmailInput.value = state.config.gitAuthorEmail || "";
@@ -637,15 +647,49 @@ function hydrateConfigForm() {
   elements.configScheduleMinutesInput.value = state.config.scheduleMinutes ?? 5;
   elements.configPrincipalUserInput.value = state.config.principalUser || "";
   elements.configAuditUserInput.value = state.config.auditUser || "";
+  elements.configRepoRootInput.placeholder = defaults.repoRoot || "Git repository 根目錄";
+  elements.configGitAuthorNameInput.placeholder = defaults.gitAuthorName || "Git author name";
+  elements.configGitAuthorEmailInput.placeholder = defaults.gitAuthorEmail || "andy@example.com";
+  elements.configPrincipalUserInput.placeholder = defaults.principalUser || "負責人";
+  elements.configAuditUserInput.placeholder = defaults.auditUser || "審計使用者";
+  elements.commitAuthorFilter.placeholder = `例如：${state.config.gitAuthorName || defaults.gitAuthorName || "作者名稱"}`;
+  elements.principalUserDefaultText.textContent = defaults.principalUser || "未設定";
+  elements.auditUserDefaultText.textContent = defaults.auditUser || "未設定";
+}
+
+function renderShellConfig() {
+  const config = state.config;
+  const defaults = config?.defaults || {};
+  const repoRoot = config?.repoRoot || defaults.repoRoot || "尚未載入掃描根目錄";
+  const userName = config?.principalUser || defaults.principalUser || config?.gitAuthorName || defaults.gitAuthorName || "未設定";
+  const initial = Array.from(userName.trim()).find(character => character.trim()) || "-";
+
+  elements.headerRepoRoot.textContent = repoRoot;
+  elements.headerRepoRoot.title = repoRoot;
+  elements.currentUserName.textContent = userName;
+  elements.currentUserInitial.textContent = initial.toUpperCase();
+
+  if (!config) {
+    elements.sidebarSqlStatus.textContent = "載入中";
+    elements.sidebarSqlDetail.textContent = "確認連線設定中";
+    return;
+  }
+
+  elements.sidebarSqlStatus.textContent = config.sqlConnectionConfigured ? "已設定" : "未設定";
+  elements.sidebarSqlDetail.textContent = config.sqlConnectionConfigured
+    ? "人工確認後寫入"
+    : "請設定 SQL 連線";
 }
 
 function renderConfigPage() {
   if (!state.config) {
     elements.statusText.textContent = "設定載入中";
     elements.configSqlStatus.textContent = "載入中";
+    renderShellConfig();
     return;
   }
 
+  renderShellConfig();
   elements.statusText.textContent = `目前掃描 ${state.config.repoRoot}，每 ${state.config.scheduleMinutes} 分鐘排程`;
   elements.configSummaryRepoRoot.textContent = state.config.repoRoot || "-";
   elements.configSummaryAuthor.textContent = `${state.config.gitAuthorName || "-"} / ${state.config.gitAuthorEmail || "未設定 Email"}`;

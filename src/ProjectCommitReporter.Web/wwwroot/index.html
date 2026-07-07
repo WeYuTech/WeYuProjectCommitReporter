@@ -36,8 +36,8 @@
         <span class="nav-label support-label">系統</span>
         <div class="side-card">
           <span>SQL</span>
-          <strong>WeyutechV6</strong>
-          <small>人工確認後寫入</small>
+          <strong id="sidebarSqlStatus">載入中</strong>
+          <small id="sidebarSqlDetail">確認連線設定中</small>
         </div>
       </nav>
     </aside>
@@ -48,7 +48,7 @@
           <button class="icon-button" type="button" aria-label="查看路徑">⌕</button>
           <div class="search-shell">
             <span>⌕</span>
-            <strong>C:\Users\rdpuser\RiderProjects</strong>
+            <strong id="headerRepoRoot">載入掃描根目錄中</strong>
           </div>
         </div>
 
@@ -56,8 +56,8 @@
           <p id="statusText">正在載入候選資料...</p>
           <button id="scanButton" class="primary" type="button">立即掃描</button>
           <div class="user-chip" aria-label="目前使用者">
-            <span>A</span>
-            <strong>Andy</strong>
+            <span id="currentUserInitial">-</span>
+            <strong id="currentUserName">載入中</strong>
           </div>
         </div>
 
@@ -335,7 +335,7 @@
                 </label>
                 <label>
                   <span>作者</span>
-                  <input id="commitAuthorFilter" type="text" placeholder="例如：Andy">
+                  <input id="commitAuthorFilter" type="text" placeholder="例如：作者名稱">
                 </label>
                 <label>
                   <span>關鍵字</span>
@@ -483,7 +483,7 @@
               </div>
               <div class="panel-block config-command-block">
                 <span class="metric-label">設定指令範例</span>
-                <code id="configConnectionCommand">powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Set-ConnectionString.ps1 -ConnectionString "Data Source=YOUR_SQL_SERVER,1433;Initial Catalog=WeyutechV6;User ID=YOUR_USER;Password=YOUR_PASSWORD;TrustServerCertificate=True;Encrypt=False"</code>
+                <code id="configConnectionCommand">powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Set-ConnectionString.ps1 -ConnectionString "Data Source=YOUR_SQL_SERVER,1433;Initial Catalog=YOUR_DATABASE;User ID=YOUR_USER;Password=YOUR_PASSWORD;TrustServerCertificate=True;Encrypt=False"</code>
               </div>
             </aside>
           </section>
@@ -504,12 +504,12 @@
                   <h3>Git 掃描</h3>
                   <label class="config-field config-field-wide">
                     <span>RepoRoot</span>
-                    <input id="configRepoRootInput" type="text" autocomplete="off" placeholder="C:\Users\rdpuser\RiderProjects">
+                    <input id="configRepoRootInput" type="text" autocomplete="off" placeholder="Git repository 根目錄">
                     <small>Git repository 的集中根目錄，掃描時會遞迴尋找底下含 `.git` 的專案</small>
                   </label>
                   <label class="config-field">
                     <span>GitAuthorName</span>
-                    <input id="configGitAuthorNameInput" type="text" autocomplete="off" placeholder="Andy">
+                    <input id="configGitAuthorNameInput" type="text" autocomplete="off" placeholder="Git author name">
                     <small>用來過濾 commit author name，避免同事的 commit 被列入你的日報</small>
                   </label>
                   <label class="config-field">
@@ -534,12 +534,12 @@
                   <label class="config-field">
                     <span>PrincipalUser</span>
                     <input id="configPrincipalUserInput" type="text" autocomplete="off">
-                    <small>寫入 `BAS_PROJECT_MAINTAIN_DETAIL.PRINCIPAL_USER` 的值，預設是 Andy</small>
+                    <small>寫入 `BAS_PROJECT_MAINTAIN_DETAIL.PRINCIPAL_USER` 的值，預設是 <span id="principalUserDefaultText">設定預設值</span></small>
                   </label>
                   <label class="config-field">
                     <span>AuditUser</span>
                     <input id="configAuditUserInput" type="text" autocomplete="off">
-                    <small>寫入 `CREATE_USER` / `EDIT_USER` 的審計使用者，預設是 ADMINV2</small>
+                    <small>寫入 `CREATE_USER` / `EDIT_USER` 的審計使用者，預設是 <span id="auditUserDefaultText">設定預設值</span></small>
                   </label>
                 </section>
               </div>
